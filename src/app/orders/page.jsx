@@ -5,9 +5,6 @@ import { Button } from '@/components/button';
 import { Heading } from '@/components/heading';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
 
-// export const metadata = {
-//   title: 'Sales Data Fetcher',
-// };
 
 export default function SalesDataFetcher() {
   const [startDate, setStartDate] = useState('');
@@ -139,17 +136,6 @@ export default function SalesDataFetcher() {
 
   return (
     <>
-      {/* <Navbar>
-        <NavbarSpacer />
-        <NavbarSection>
-          <Dropdown>
-            <DropdownButton as={NavbarItem}>
-              <Avatar src="/users/erica.jpg" square />
-            </DropdownButton>
-            <AccountDropdownMenu anchor="bottom end" />
-          </Dropdown>
-        </NavbarSection>
-      </Navbar> */}
       <div className="bg-gray-900 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:max-w-none">
