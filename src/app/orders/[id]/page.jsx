@@ -11,13 +11,13 @@ import { BanknotesIcon, CalendarIcon, ChevronLeftIcon, CreditCardIcon } from '@h
 import { notFound } from 'next/navigation'
 import { RefundOrder } from './refund'
 
-export async function generateMetadata({ params }) {
-  let order = await getOrder(params.id)
+// export async function generateMetadata({ params }) {
+//   let order = await getOrder(params.id)
 
-  return {
-    title: order && `Order #${order.id}`,
-  }
-}
+//   return {
+//     title: order && `Order #${order.id}`,
+//   }
+// }
 
 export default async function Order({ params }) {
   let order = await getOrder(params.id)
