@@ -6,7 +6,7 @@ import { Divider } from '@/components/divider'
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Navbar } from './Navbar';
-import { Stat } from './Stat';
+import { Stat } from './Statt';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table'
 import { Filters } from './Filters';
 import { formatIncome, formatHasCalendar, formatHasProduct, formatFirstTransaction, formatMailgunConnected, formatPaymentProcessor, formatAccountStatus } from './utils';
