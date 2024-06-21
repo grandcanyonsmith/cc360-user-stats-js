@@ -132,8 +132,13 @@ export default function Home() {
           <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900 location-name">
             {user.location_name.replace("'s Account", '').replace('Account', '').trim().length > 15 ? `${user.location_name.replace("'s Account", '').replace('Account', '').trim().substring(0, 15)}...` : user.location_name.replace("'s Account", '').replace('Account', '').trim()}
           </a>
-          <div className="text-xs text-gray-500">
-            {formatDate(user.relative_created_time)} <span className={`text-xs font-semibold ${user.account_status === 'Active' ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100'}`}>{formatAccountStatus(user.account_status)}</span>
+          <div className="text-xs text-gray-500 flex items-center">
+          <div className={`flex-none rounded-full p-1 ${getStatusBgColor(user.account_status)}`}>
+              <div className="h-1.5 w-1.5 rounded-full bg-current"></div>
+            </div>
+            <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
+            
+            <div className="hidden sm:block ml-1">{formatAccountStatus(user.account_status)}</div>
           </div>
         </TableCell>
         <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
@@ -141,6 +146,21 @@ export default function Home() {
         <TableCell><span className={`text-xs font-semibold ${user.has_had_first_transaction ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatFirstTransaction(user.has_had_first_transaction, user.income_all_time)}</span></TableCell>
       </TableRow>
     ));
+  };
+  
+  const getStatusBgColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-400/10 text-green-400';
+      case 'canceled':
+        return 'bg-red-400/10 text-red-400';
+      case 'past_due':
+        return 'bg-yellow-400/10 text-yellow-400';
+      case 'trialing':
+        return 'bg-blue-400/10 text-blue-400';
+      default:
+        return 'bg-gray-400/10 text-gray-400';
+    }
   };
 
   const updateCards = (filteredUsers) => {
@@ -203,6 +223,7 @@ export default function Home() {
     return result;
   };
 
+  
   const StatCard = ({ title, value, subtitle, trendData, showGraph }) => {
     const statusClasses = {
       'Active': 'bg-green-600',
@@ -219,7 +240,7 @@ export default function Home() {
     ) : (
       title
     );
-    const textColor = (title === 'MailGun' || title === 'Payment Int.') ? 'text-green-600' : 'text-gray-900';
+    const textColor = (title === 'MailGun Connected' || title === 'Payment Processor Connected') ? 'text-green-600' : 'text-gray-900';
     return (
       <div className="flex flex-col bg-white p-4 shadow rounded-md">
         <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{formattedTitle}</dt>
@@ -338,7 +359,7 @@ export default function Home() {
             <hr className="mt-4 mb-8 border-t border-gray-300" />
           </div>
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-            <Button className="mb-4 sm:mb-0" onClick={() => setIsSidebarOpen(true)}>Filters</Button>
+            {/* <Button className="mb-4 sm:mb-0" onClick={() => setIsSidebarOpen(true)}>Filters</Button> */}
             <div className="hidden sm:block">
               <SalesDatePicker
                 startDate={startDate}
@@ -363,9 +384,9 @@ export default function Home() {
           </dl>
         </div>
       </div>
-      <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6">
-        <div className="mx-auto max-w-7xl">
-          <Table className="table-auto w-full">
+      <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 bg-white-100">
+        <div className="mx-auto max-w-7xl bg-white-100">
+          <Table className="table-auto w-full bg-white-100">
             <TableHead>
               <TableRow>
                 <TableHeader>Location Name</TableHeader>
@@ -388,57 +409,50 @@ export default function Home() {
           </div>
         </div>
       )}
+      
+
       <style jsx>{`
-        th, td {
-          padding: 0.5rem 0.75rem; /* Adjust padding to make columns less spaced apart */
-        }
-        th {
-          font-size: 0.75rem; /* Smaller text for table headers */
-          white-space: normal; /* Allow text to wrap onto two lines */
-        }
-        .location-name {
-          font-size: 0.875rem; /* Smaller text for location name */
-        }
-        @media (max-width: 640px) {
-          .flex-col {
-            flex-direction: column;
-          }
-          .table-auto {
-            display: block;
-            overflow-x: auto;
-            white-space: nowrap;
-          }
-          .table-auto th, .table-auto td {
-            display: inline-block;
-            width: auto;
-          }
-          th, td {
-            font-size: 0.75rem; /* Smaller text for table data */
-          }
-          .status-dot {
-            display: inline-block;
-            width: 0.5rem;
-            height: 0.5rem;
-            border-radius: 50%;
-            margin-right: 0.5rem;
-          }
-          .status-active {
-            background-color: #16a34a; /* Green */
-          }
-          .status-canceled {
-            background-color: #dc2626; /* Red */
-          }
-          .status-past_due {
-            background-color: #facc15; /* Yellow */
-          }
-          .status-trialing {
-            background-color: #3b82f6; /* Blue */
-          }
-          .status-unknown {
-            background-color: #6b7280; /* Gray */
-          }
-        }
-      `}</style>
+  th, td {
+    padding: 0.5rem 0.75rem; /* Adjust padding to make columns less spaced apart */
+  }
+  th {
+    font-size: 0.75rem; /* Smaller text for table headers */
+    white-space: normal; /* Allow text to wrap onto two lines */
+  }
+  .location-name {
+    font-size: 0.875rem; /* Smaller text for location name */
+  }
+  .status-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+  }
+  .text-green-600 {
+    color: #16a34a;
+  }
+  @media (max-width: 640px) {
+    .flex-col {
+      flex-direction: column;
+    }
+    .table-auto {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .table-auto th, .table-auto td {
+      display: inline-block;
+      width: auto;
+    }
+    th, td {
+      font-size: 0.75rem; /* Smaller text for table data */
+    }
+    .hidden {
+      display: none;
+    }
+  }
+`}</style>
     </>
   );
 }
