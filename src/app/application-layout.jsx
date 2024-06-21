@@ -44,24 +44,24 @@ import { usePathname } from 'next/navigation'
 function AccountDropdownMenu({ anchor }) {
   return (
     <DropdownMenu className="min-w-64" anchor={anchor}>
-      <DropdownItem href="#">
+      {/* <DropdownItem href="#">
         <UserCircleIcon />
         <DropdownLabel>My account</DropdownLabel>
-      </DropdownItem>
+      </DropdownItem> */}
       <DropdownDivider />
-      <DropdownItem href="#">
+      <DropdownItem href="https://www.notion.so/Sales-4575bc281a7442efbe0f5663010565d1?pvs=4">
         <ShieldCheckIcon />
-        <DropdownLabel>Privacy policy</DropdownLabel>
+        <DropdownLabel>Notion</DropdownLabel>
       </DropdownItem>
-      <DropdownItem href="#">
+      <DropdownItem href="https://html-starter-coral.vercel.app/optin-funnel-request.html">
         <LightBulbIcon />
-        <DropdownLabel>Share feedback</DropdownLabel>
+        <DropdownLabel>AI Funnel Creator</DropdownLabel>
       </DropdownItem>
       <DropdownDivider />
-      <DropdownItem href="#">
+      {/* <DropdownItem href="#">
         <ArrowRightStartOnRectangleIcon />
         <DropdownLabel>Sign out</DropdownLabel>
-      </DropdownItem>
+      </DropdownItem> */}
     </DropdownMenu>
   )
 }
@@ -76,7 +76,7 @@ export function ApplicationLayout({ events, children }) {
           <NavbarSection>
             <Dropdown>
               <DropdownButton as={NavbarItem}>
-                <Avatar src="/users/erica.jpg" square />
+                <Avatar src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://assets.cdn.filesafe.space/c2DjRsOo4e13Od6ZTU6S/media/6258b4470b05098bfa37332a.png" square />
               </DropdownButton>
               <AccountDropdownMenu anchor="bottom end" />
             </Dropdown>
@@ -88,8 +88,8 @@ export function ApplicationLayout({ events, children }) {
           <SidebarHeader>
             <Dropdown>
               <DropdownButton as={SidebarItem}>
-                <Avatar src="/teams/catalyst.svg" />
-                <SidebarLabel>Catalyst</SidebarLabel>
+                <Avatar src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://assets.cdn.filesafe.space/c2DjRsOo4e13Od6ZTU6S/media/6258b4470b05098bfa37332a.png" />
+                <SidebarLabel>Course Creator 360</SidebarLabel>
                 <ChevronDownIcon />
               </DropdownButton>
               <DropdownMenu className="min-w-80 lg:min-w-64" anchor="bottom start">
@@ -99,18 +99,18 @@ export function ApplicationLayout({ events, children }) {
                 </DropdownItem>
                 <DropdownDivider />
                 <DropdownItem href="#">
-                  <Avatar slot="icon" src="/teams/catalyst.svg" />
-                  <DropdownLabel>Catalyst</DropdownLabel>
+                  <Avatar slot="icon" src="https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://assets.cdn.filesafe.space/c2DjRsOo4e13Od6ZTU6S/media/6258b4470b05098bfa37332a.png" />
+                  <DropdownLabel>Course Creator 360</DropdownLabel>
                 </DropdownItem>
-                <DropdownItem href="#">
+                {/* <DropdownItem href="#">
                   <Avatar slot="icon" initials="BE" className="bg-purple-500 text-white" />
                   <DropdownLabel>Big Events</DropdownLabel>
-                </DropdownItem>
+                </DropdownItem> */}
                 <DropdownDivider />
-                <DropdownItem href="#">
+                {/* <DropdownItem href="#">
                   <PlusIcon />
                   <DropdownLabel>New team&hellip;</DropdownLabel>
-                </DropdownItem>
+                </DropdownItem> */}
               </DropdownMenu>
             </Dropdown>
           </SidebarHeader>
