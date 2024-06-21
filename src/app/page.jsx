@@ -69,8 +69,8 @@ export default function Home() {
       });
       console.log('Processed users:', users);
       setUsers(users);
-      setFilteredUsers(users);
-      updateCards(users);
+      setFilteredUsers(users.filter(user => user.account_status !== 'Unknown'));
+      updateCards(users.filter(user => user.account_status !== 'Unknown'));
     })
     .catch(error => {
       console.error('Error fetching users:', error);
@@ -202,19 +202,39 @@ export default function Home() {
     return result;
   };
 
-  const StatCard = ({ title, value, subtitle, trendData, showGraph }) => (
-    <div className="flex flex-col bg-white p-4 shadow rounded-md">
-      <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{title}</dt>
-      <dd className="text-sm text-gray-600 mt-1 text-left">{trendData.length > 0 ? formatDate(trendData[0].date) : 'N/A'}</dd>
-      <dd className="text-2xl font-bold tracking-tight text-gray-900 mt-1 text-left">{value}</dd>
-      {subtitle && <dd className="text-sm text-gray-600 mt-1 text-left">{subtitle}</dd>}
-      {showGraph && (
-        <div className="flex-grow w-full">
-          <TrendGraph data={trendData} />
-        </div>
-      )}
-    </div>
-  );
+  const StatCard = ({ title, value, subtitle, trendData, showGraph }) => {
+    const statusClasses = {
+      'Active': 'bg-green-600',
+      'Canceled': 'bg-red-600',
+      'Past Due': 'bg-yellow-600',
+      'Trialing': 'bg-blue-600',
+      'Unknown': 'bg-gray-600'
+    };
+  
+    const formattedTitle = statusClasses[title] ? (
+      <div className="flex items-center">
+        <span className={`inline-block w-2 h-2 mr-2 rounded-full ${statusClasses[title]}`}></span>
+        <span>{title}</span>
+      </div>
+    ) : (
+      title
+    );
+  
+    const textColor = (title === 'MailGun Connected' || title === 'Payment Processor Connected') ? 'text-green-600' : 'text-gray-900';
+  
+    return (
+      <div className="flex flex-col bg-white p-4 shadow rounded-md">
+        <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{formattedTitle}</dt>
+        <dd className={`text-2xl font-bold tracking-tight ${textColor} mt-1 text-left`}>{value}</dd>
+        {subtitle && <dd className="text-sm text-gray-600 mt-1 text-left">{subtitle}</dd>}
+        {showGraph && (
+          <div className="flex-grow w-full">
+            <TrendGraph data={trendData} />
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const TrendGraph = ({ data }) => (
     <ResponsiveContainer width="100%" height={100}>
@@ -240,6 +260,17 @@ export default function Home() {
     return date.toLocaleString('default', { month: 'short', day: 'numeric' });
   };
 
+  const formatStatus = (status) => {
+    const statusClasses = {
+      'active': 'text-green-600 bg-green-100',
+      'canceled': 'text-red-600 bg-red-100',
+      'past_due': 'text-yellow-600 bg-yellow-100',
+      'trialing': 'text-purple-600 bg-blue-100',
+      'unknown': 'text-gray-600 bg-gray-100'
+    };
+    return <span className={`text-xs font-semibold ${statusClasses[status.toLowerCase()] || 'text-gray-600 bg-gray-100'} rounded-full`}>{formatAccountStatus(status)}</span>;
+  };
+
   return (
     <>
       <div className="py-12 sm:py-16">
@@ -249,7 +280,8 @@ export default function Home() {
             <p className="mt-4 text-lg leading-8 text-gray-600">Overview of user data based on the selected date range.</p>
             <hr className="mt-4 mb-8 border-t border-gray-300" />
           </div>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+            <Button className="mb-4 sm:mb-0" onClick={() => setIsSidebarOpen(true)}>Filters</Button>
             <SalesDatePicker
               startDate={startDate}
               setStartDate={setStartDate}
@@ -257,16 +289,15 @@ export default function Home() {
               setEndDate={setEndDate}
               fetchSalesData={fetchData}
             />
-            <Button onClick={() => setIsSidebarOpen(true)}>Filters</Button>
           </div>
           <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
             <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
-            <StatCard title="First Transaction Completed" value={stats.transactionPercentage} subtitle={stats.transactionCount} trendData={aggregateDataByDay(filteredUsers, 'has_had_first_transaction')} showGraph={true} />
+            {/* <StatCard title="First Transaction Completed" value={stats.transactionPercentage} subtitle={stats.transactionCount} trendData={aggregateDataByDay(filteredUsers, 'has_had_first_transaction')} showGraph={true} /> */}
             <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
-            <StatCard title="Average Time to Revenue" value={stats.averageTimeToRevenue} subtitle="from last week" trendData={aggregateDataByDay(filteredUsers, 'time_to_become_profitable')} showGraph={false} />
+            {/* <StatCard title="Average Time to Revenue" value={stats.averageTimeToRevenue} subtitle="from last week" trendData={aggregateDataByDay(filteredUsers, 'time_to_become_profitable')} showGraph={false} /> */}
             <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
             <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-            <StatCard title="Unknown" value="0%" subtitle="0 of 0 from last week" trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+            {/* <StatCard title="Unknown" value="0%" subtitle="0 of 0 from last week" trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} /> */}
             <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
             <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
           </dl>
@@ -274,7 +305,7 @@ export default function Home() {
       </div>
       <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6">
         <div className="mx-auto max-w-7xl">
-          <Table>
+          <Table className="table-auto w-full">
             <TableHead>
               <TableRow>
                 <TableHeader>Location Name</TableHeader>
@@ -307,6 +338,20 @@ export default function Home() {
         }
         .location-name {
           font-size: 0.875rem; /* Smaller text for location name */
+        }
+        @media (max-width: 640px) {
+          .flex-col {
+            flex-direction: column;
+          }
+          .table-auto {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+          }
+          .table-auto th, .table-auto td {
+            display: inline-block;
+            width: auto;
+          }
         }
       `}</style>
     </>
