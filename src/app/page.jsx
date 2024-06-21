@@ -353,7 +353,7 @@ export default function Home() {
               <hr className="mt-2 mb-4 border-t border-gray-300" />
             </div>
           </div>
-          <dl           className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
+          <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
             <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
             <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
             <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
@@ -414,6 +414,28 @@ export default function Home() {
           }
           th, td {
             font-size: 0.75rem; /* Smaller text for table data */
+          }
+          .status-dot {
+            display: inline-block;
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+          }
+          .status-active {
+            background-color: #16a34a; /* Green */
+          }
+          .status-canceled {
+            background-color: #dc2626; /* Red */
+          }
+          .status-past_due {
+            background-color: #facc15; /* Yellow */
+          }
+          .status-trialing {
+            background-color: #3b82f6; /* Blue */
+          }
+          .status-unknown {
+            background-color: #6b7280; /* Gray */
           }
         }
       `}</style>
