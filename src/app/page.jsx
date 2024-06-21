@@ -133,11 +133,10 @@ export default function Home() {
             {user.location_name.replace("'s Account", '').replace('Account', '').trim().length > 15 ? `${user.location_name.replace("'s Account", '').replace('Account', '').trim().substring(0, 15)}...` : user.location_name.replace("'s Account", '').replace('Account', '').trim()}
           </a>
           <div className="text-xs text-gray-500 flex items-center">
-          <div className={`flex-none rounded-full p-1 ${getStatusBgColor(user.account_status)}`}>
+            <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
+            <div className={`flex-none rounded-full p-1 ${getStatusBgColor(user.account_status)}`}>
               <div className="h-1.5 w-1.5 rounded-full bg-current"></div>
             </div>
-            <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
-            
             <div className="hidden sm:block ml-1">{formatAccountStatus(user.account_status)}</div>
           </div>
         </TableCell>
@@ -149,6 +148,7 @@ export default function Home() {
   };
   
   const getStatusBgColor = (status) => {
+    if (!status) return 'bg-gray-400/10 text-gray-400';
     switch (status.toLowerCase()) {
       case 'active':
         return 'bg-green-400/10 text-green-400';
@@ -162,6 +162,7 @@ export default function Home() {
         return 'bg-gray-400/10 text-gray-400';
     }
   };
+  
 
   const updateCards = (filteredUsers) => {
     console.log('Updating cards with filtered users:', filteredUsers);
@@ -391,7 +392,7 @@ export default function Home() {
               <TableRow>
                 <TableHeader>Location Name</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun</TableHeader>
-                <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Pay Int</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Payment Int</TableHeader>
                 {/* <TableHeader className="cursor-pointer" onClick={() => handleSort('has_had_first_transaction')}>AllTime $</TableHeader> */}
               </TableRow>
             </TableHead>
@@ -411,7 +412,8 @@ export default function Home() {
       )}
       
 
-      <style jsx>{`
+      
+<style jsx>{`
   th, td {
     padding: 0.5rem 0.75rem; /* Adjust padding to make columns less spaced apart */
   }
