@@ -128,16 +128,16 @@ export default function Home() {
     return filteredUsers.map(user => (
       <TableRow key={user.location_id}>
         <TableCell>
-          <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900">
-            {user.location_name}
+          <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900 location-name">
+            {user.location_name.replace("'s Account", '').trim()}
           </a>
-          <div className="text-xs text-gray-500">{formatDate(user.relative_created_time)}</div>
+          <div className="text-xs text-gray-500">
+            {formatDate(user.relative_created_time)} <span className={`text-xs font-semibold ${user.account_status === 'Active' ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100'}`}>{formatAccountStatus(user.account_status)}</span>
+          </div>
         </TableCell>
-        <TableCell><span className="px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full">{formatFirstTransaction(user.has_had_first_transaction)}</span></TableCell>
-        <TableCell><span className="px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full">{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
-        <TableCell><span className="px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full">{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
-        <TableCell><span className={`px-2 py-1 text-xs font-semibold rounded-full ${user.account_status === 'active' ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100'}`}>{formatAccountStatus(user.account_status)}</span></TableCell>
-        <TableCell>{formatIncome(user.income_all_time)}</TableCell>
+        <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
+        <TableCell><span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
+        <TableCell><span className={`text-xs font-semibold ${user.has_had_first_transaction ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatFirstTransaction(user.has_had_first_transaction, user.income_all_time)}</span></TableCell>
       </TableRow>
     ));
   };
@@ -202,15 +202,17 @@ export default function Home() {
     return result;
   };
 
-  const StatCard = ({ title, value, subtitle, trendData }) => (
+  const StatCard = ({ title, value, subtitle, trendData, showGraph }) => (
     <div className="flex flex-col bg-white p-4 shadow rounded-md">
       <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{title}</dt>
       <dd className="text-sm text-gray-600 mt-1 text-left">{trendData.length > 0 ? formatDate(trendData[0].date) : 'N/A'}</dd>
       <dd className="text-2xl font-bold tracking-tight text-gray-900 mt-1 text-left">{value}</dd>
       {subtitle && <dd className="text-sm text-gray-600 mt-1 text-left">{subtitle}</dd>}
-      <div className="flex-grow w-full">
-        <TrendGraph data={trendData} />
-      </div>
+      {showGraph && (
+        <div className="flex-grow w-full">
+          <TrendGraph data={trendData} />
+        </div>
+      )}
     </div>
   );
 
@@ -247,26 +249,26 @@ export default function Home() {
             <p className="mt-4 text-lg leading-8 text-gray-600">Overview of user data based on the selected date range.</p>
             <hr className="mt-4 mb-8 border-t border-gray-300" />
           </div>
-          <SalesDatePicker
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            fetchSalesData={fetchData}
-          />
           <div className="flex justify-between items-center mb-4">
+            <SalesDatePicker
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              fetchSalesData={fetchData}
+            />
             <Button onClick={() => setIsSidebarOpen(true)}>Filters</Button>
           </div>
           <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
-            <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} />
-            <StatCard title="First Transaction Completed" value={stats.transactionPercentage} subtitle={stats.transactionCount} trendData={aggregateDataByDay(filteredUsers, 'has_had_first_transaction')} />
-            <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} />
-            <StatCard title="Average Time to Revenue" value={stats.averageTimeToRevenue} subtitle="from last week" trendData={aggregateDataByDay(filteredUsers, 'time_to_become_profitable')} />
-            <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} />
-            <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} />
-            <StatCard title="Unknown" value="0%" subtitle="0 of 0 from last week" trendData={aggregateDataByDay(filteredUsers, 'account_status')} />
-            <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} />
-            <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} />
+            <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
+            <StatCard title="First Transaction Completed" value={stats.transactionPercentage} subtitle={stats.transactionCount} trendData={aggregateDataByDay(filteredUsers, 'has_had_first_transaction')} showGraph={true} />
+            <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
+            <StatCard title="Average Time to Revenue" value={stats.averageTimeToRevenue} subtitle="from last week" trendData={aggregateDataByDay(filteredUsers, 'time_to_become_profitable')} showGraph={false} />
+            <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+            <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+            <StatCard title="Unknown" value="0%" subtitle="0 of 0 from last week" trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+            <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+            <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
           </dl>
         </div>
       </div>
@@ -276,11 +278,9 @@ export default function Home() {
             <TableHead>
               <TableRow>
                 <TableHeader>Location Name</TableHeader>
-                <TableHeader className="cursor-pointer" onClick={() => handleSort('has_had_first_transaction')}>First Transaction</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun Connected</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Payment Processor</TableHeader>
-                <TableHeader className="cursor-pointer" onClick={() => handleSort('account_status')}>Status</TableHeader>
-                <TableHeader className="cursor-pointer" onClick={() => handleSort('income_all_time')}>All Time $</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('has_had_first_transaction')}>All Time $</TableHeader>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -290,7 +290,7 @@ export default function Home() {
         </div>
       </div>
       {isSidebarOpen && (
-        <div className="fixed inset-0 bg-opacity-50 z-50 flex">
+        <div className="fixed inset-0 bg-opacity-50 z-50 flex justify-end">
           <div className="bg-white w-64 p-4 shadow-lg">
             <button onClick={() => setIsSidebarOpen(false)} className="mb-4">Close</button>
             <Filters onFilterChange={setFilteredUsers} />
@@ -304,6 +304,9 @@ export default function Home() {
         th {
           font-size: 0.75rem; /* Smaller text for table headers */
           white-space: normal; /* Allow text to wrap onto two lines */
+        }
+        .location-name {
+          font-size: 0.875rem; /* Smaller text for location name */
         }
       `}</style>
     </>

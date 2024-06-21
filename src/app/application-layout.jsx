@@ -139,14 +139,14 @@ export function ApplicationLayout({ events, children }) {
             </SidebarSection> */}
             <SidebarSpacer />
             <SidebarSection>
-              <SidebarItem href="#">
+              <SidebarItem href="https://app.coursecreator360.com">
                 <QuestionMarkCircleIcon />
-                <SidebarLabel>Support</SidebarLabel>
+                <SidebarLabel>Login to CC360</SidebarLabel>
               </SidebarItem>
-              <SidebarItem href="#">
+              {/* <SidebarItem href="#">
                 <SparklesIcon />
                 <SidebarLabel>Changelog</SidebarLabel>
-              </SidebarItem>
+              </SidebarItem> */}
             </SidebarSection>
           </SidebarBody>
           {/* <SidebarFooter className="max-lg:hidden">
