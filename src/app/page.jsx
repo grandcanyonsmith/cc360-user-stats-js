@@ -143,7 +143,7 @@ export default function Home() {
         </TableCell>
         <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
         <TableCell><span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
-        <TableCell><span className={`text-xs font-semibold ${user.has_had_first_transaction ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatFirstTransaction(user.has_had_first_transaction, user.income_all_time)}</span></TableCell>
+        {/* <TableCell><span className={`text-xs font-semibold ${user.has_had_first_transaction ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatFirstTransaction(user.has_had_first_transaction, user.income_all_time)}</span></TableCell> */}
       </TableRow>
     ));
   };
@@ -392,7 +392,7 @@ export default function Home() {
                 <TableHeader>Location Name</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Pay Int</TableHeader>
-                <TableHeader className="cursor-pointer" onClick={() => handleSort('has_had_first_transaction')}>AllTime $</TableHeader>
+                {/* <TableHeader className="cursor-pointer" onClick={() => handleSort('has_had_first_transaction')}>AllTime $</TableHeader> */}
               </TableRow>
             </TableHead>
             <TableBody>
