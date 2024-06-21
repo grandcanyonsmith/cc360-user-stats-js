@@ -80,8 +80,8 @@ const SalesDatePicker = ({ startDate, setStartDate, endDate, setEndDate, fetchSa
   };
 
   return (
-    <div className="flex items-center space-x-4">
-      <div className="relative inline-block text-left">
+    <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+      <div className="relative inline-block text-left w-full md:w-auto">
         <div>
           <button
             type="button"
@@ -119,17 +119,17 @@ const SalesDatePicker = ({ startDate, setStartDate, endDate, setEndDate, fetchSa
           </div>
         )}
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
         <DatePicker
           selected={startDate}
           onChange={(date) => setStartDate(date)}
-          className="border rounded-md px-3 py-2"
+          className="border rounded-md px-3 py-2 w-full md:w-auto"
         />
         <span className="text-gray-900">to</span>
         <DatePicker
           selected={endDate}
           onChange={(date) => setEndDate(date)}
-          className="border rounded-md px-3 py-2"
+          className="border rounded-md px-3 py-2 w-full md:w-auto"
         />
       </div>
     </div>
