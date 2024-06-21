@@ -7,7 +7,7 @@ import { Heading } from '@/components/heading';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
-import { formatIncome, formatHasCalendar, formatHasProduct, formatFirstTransaction, formatMailgunConnected, formatPaymentProcessor, formatAccountStatus } from './utils';
+import { formatIncome, formatFirstTransaction, formatMailgunConnected, formatPaymentProcessor, formatAccountStatus } from './utils';
 import { Filters } from './Filters'; // Assuming Filters component is available
 
 export default function Home() {
@@ -82,11 +82,9 @@ export default function Home() {
     const timeParts = relativeTime.split(' ');
     const value = parseInt(timeParts[0], 10);
     const unit = timeParts[1];
-
     if (isNaN(value)) {
       return now; // Return current date if parsing fails
     }
-
     switch (unit) {
       case 'seconds':
       case 'second':
@@ -133,19 +131,13 @@ export default function Home() {
           <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900">
             {user.location_name}
           </a>
+          <div className="text-xs text-gray-500">{formatDate(user.relative_created_time)}</div>
         </TableCell>
+        <TableCell><span className="px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full">{formatFirstTransaction(user.has_had_first_transaction)}</span></TableCell>
+        <TableCell><span className="px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full">{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
+        <TableCell><span className="px-2 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full">{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
+        <TableCell><span className={`px-2 py-1 text-xs font-semibold rounded-full ${user.account_status === 'active' ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100'}`}>{formatAccountStatus(user.account_status)}</span></TableCell>
         <TableCell>{formatIncome(user.income_all_time)}</TableCell>
-        <TableCell className="hidden sm:table-cell hidden-column">{formatIncome(user.last_ninety_day_income)}</TableCell>
-        <TableCell className="hidden sm:table-cell hidden-column">{formatIncome(user.last_thirty_day_income)}</TableCell>
-        <TableCell className="hidden sm:table-cell hidden-column">{formatIncome(user.last_seven_day_income)}</TableCell>
-        <TableCell>{formatHasCalendar(user.total_calendars)}</TableCell>
-        <TableCell>{formatHasProduct(user.total_products)}</TableCell>
-        <TableCell>{formatDate(user.relative_created_time)}</TableCell>
-        <TableCell className="hidden-column">{user.relative_time_to_revenue || 'N/A'}</TableCell>
-        <TableCell className="hidden-column">{formatFirstTransaction(user.has_had_first_transaction)}</TableCell>
-        <TableCell>{formatMailgunConnected(user.mailgun_connected)}</TableCell>
-        <TableCell>{formatPaymentProcessor(user.payment_processor_integration)}</TableCell>
-        <TableCell>{formatAccountStatus(user.account_status)}</TableCell>
       </TableRow>
     ));
   };
@@ -284,18 +276,11 @@ export default function Home() {
             <TableHead>
               <TableRow>
                 <TableHeader>Location Name</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('has_had_first_transaction')}>First Transaction</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun Connected</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Payment Processor</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('account_status')}>Status</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('income_all_time')}>All Time $</TableHeader>
-                <TableHeader className="cursor-pointer hidden sm:table-cell hidden-column" onClick={() => handleSort('last_ninety_day_income')}>90D $</TableHeader>
-                <TableHeader className="cursor-pointer hidden sm:table-cell hidden-column" onClick={() => handleSort('last_thirty_day_income')}>30D $</TableHeader>
-                <TableHeader className="cursor-pointer hidden sm:table-cell hidden-column" onClick={() => handleSort('last_seven_day_income')}>7D $</TableHeader>
-                <TableHeader>Calendars</TableHeader>
-                <TableHeader>Products</TableHeader>
-                <TableHeader>Relative Created Time</TableHeader>
-                <TableHeader className="hidden-column">Relative Time to Revenue</TableHeader>
-                <TableHeader className="hidden-column" onClick={() => handleSort('has_had_first_transaction')}>First Transaction</TableHeader>
-                <TableHeader>Mailgun Connected</TableHeader>
-                <TableHeader>Payment Processor</TableHeader>
-                <TableHeader>Status</TableHeader>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -313,8 +298,12 @@ export default function Home() {
         </div>
       )}
       <style jsx>{`
-        .hidden-column {
-          display: none;
+        th, td {
+          padding: 0.5rem 0.75rem; /* Adjust padding to make columns less spaced apart */
+        }
+        th {
+          font-size: 0.75rem; /* Smaller text for table headers */
+          white-space: normal; /* Allow text to wrap onto two lines */
         }
       `}</style>
     </>
