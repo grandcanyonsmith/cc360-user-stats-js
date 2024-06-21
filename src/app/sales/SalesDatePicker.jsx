@@ -26,28 +26,30 @@ const SalesDatePicker = ({ startDate, setStartDate, endDate, setEndDate, fetchSa
 
   const handleRangeChange = (range) => {
     setSelectedRange(range);
-    // Set the dates based on the selected range
     const today = new Date();
     let start, end;
-
     switch (range) {
       case 'today':
         start = end = today;
         break;
       case 'last7days':
-        start = new Date(today.setDate(today.getDate() - 7));
+        start = new Date(today);
+        start.setDate(today.getDate() - 7);
         end = new Date();
         break;
       case 'last4weeks':
-        start = new Date(today.setDate(today.getDate() - 28));
+        start = new Date(today);
+        start.setDate(today.getDate() - 28);
         end = new Date();
         break;
       case 'last3months':
-        start = new Date(today.setMonth(today.getMonth() - 3));
+        start = new Date(today);
+        start.setMonth(today.getMonth() - 3);
         end = new Date();
         break;
       case 'last12months':
-        start = new Date(today.setFullYear(today.getFullYear() - 1));
+        start = new Date(today);
+        start.setFullYear(today.getFullYear() - 1);
         end = new Date();
         break;
       case 'monthtodate':
@@ -69,7 +71,6 @@ const SalesDatePicker = ({ startDate, setStartDate, endDate, setEndDate, fetchSa
       default:
         start = end = new Date();
     }
-
     setStartDate(start);
     setEndDate(end);
     fetchSalesData(start, end);

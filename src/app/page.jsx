@@ -137,7 +137,7 @@ export default function Home() {
               <div className="h-1.5 w-1.5 rounded-full bg-current"></div>
             </div>
             <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
-            <div className="hidden sm:block ml-1">{formatAccountStatus(user.account_status)}</div>
+            <div className="hidden sm:block ml-2">{formatAccountStatus(user.account_status)}</div>
           </div>
         </TableCell>
         <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
