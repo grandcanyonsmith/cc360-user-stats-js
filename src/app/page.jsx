@@ -336,12 +336,12 @@ export default function Home() {
   };
 
   const DateRangeSelector = () => (
-    <div className="flex space-x-2">
+    <div className="flex space-x-1">
       {['1W', '4W', '1Y', 'MTD', 'QTD', 'YTD', 'ALL'].map(range => (
         <button
           key={range}
           onClick={() => handleDateRangeChange(range)}
-          className={`text-sm font-semibold px-3 py-1 rounded-md ${selectedRange === range ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
+          className={`text-sm font-semibold px-2 py-1 rounded-md ${selectedRange === range ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
         >
           {range}
         </button>

@@ -17,7 +17,8 @@ export default async function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className="text-zinc-950 antialiased lg:bg-zinc-100 dark:bg-zinc-900 dark:text-white dark:lg:bg-zinc-950"
+      // className="text-zinc-950 antialiased lg:bg-zinc-100 dark:bg-zinc-900 dark:text-white dark:lg:bg-zinc-950"
+      className="text-zinc-950 antialiased lg:bg-zinc-100 dark:bg-white-900 dark:text-slate dark:lg:bg-white-950"
     >
       <head>
         <link rel="preconnect" href="https://rsms.me/" />
