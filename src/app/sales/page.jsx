@@ -175,9 +175,10 @@ export default function SalesDataFetcher() {
     <>
       <div className="bg-gray-100 py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 lg:px-6">
-          <div className="mx-auto max-w-2xl lg:max-w-none text-center">
+          <div className="text-left">
             <Heading className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Sales Data</Heading>
             <p className="mt-4 text-lg leading-8 text-gray-600">Overview of sales data based on the selected date range.</p>
+            <hr className="mt-4 mb-8 border-t border-gray-300" />
           </div>
           <dl className="mt-8 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
             <StatCard title="Total" value={totals.totalRevenue} subtitle={`Sales Amount: ${totals.totalSalesAmount}`} trendData={aggregateSalesByDay(detailedData)} />
@@ -208,6 +209,7 @@ export default function SalesDataFetcher() {
 const StatCard = ({ title, value, subtitle, trendData }) => (
   <div className="flex flex-col bg-white p-4 shadow rounded-md">
     <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{title}</dt>
+    <dd className="text-sm text-gray-600 mt-1 text-left">{formatDate(trendData[0]?.date)}</dd>
     <dd className="text-2xl font-bold tracking-tight text-gray-900 mt-1 text-left">{formatCurrency(value)}</dd>
     {subtitle && <dd className="text-sm text-gray-600 mt-1 text-left">{subtitle}</dd>}
     <div className="flex-grow w-full">
@@ -228,7 +230,10 @@ const TrendGraph = ({ data }) => {
           ticks={[data[0]?.date, data[data.length - 1]?.date]} // Show only start and end dates
         />
         <YAxis tickFormatter={(tick) => formatCurrency(tick)} />
-        <Tooltip />
+        <Tooltip
+          formatter={(value) => formatCurrency(value)}
+          labelFormatter={(label) => formatDate(label)}
+        />
         <Line type="monotone" dataKey="value" stroke="#0072c6" dot={false} />
       </LineChart>
     </ResponsiveContainer>
