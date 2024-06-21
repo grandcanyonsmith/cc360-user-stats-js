@@ -16,6 +16,7 @@ export default function Home() {
     date.setDate(date.getDate() - 7);
     return date;
   });
+  const [revenueTrendData, setRevenueTrendData] = useState([]);
   const [endDate, setEndDate] = useState(new Date());
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -38,6 +39,9 @@ export default function Home() {
     trialingPercentage: '0%',
     trialingCount: '0 of 0',
   });
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [avgDailyMRR, setAvgDailyMRR] = useState(0);
+  const [mrrTrajectory, setMrrTrajectory] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedRange, setSelectedRange] = useState('1W');
 
@@ -72,10 +76,46 @@ export default function Home() {
         setUsers(users);
         setFilteredUsers(users.filter(user => user.account_status !== 'Unknown'));
         updateCards(users.filter(user => user.account_status !== 'Unknown'));
+        const totalRevenue = calculateTotalRevenue(users);
+        const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, start, end);
+        setTotalRevenue(totalRevenue);
+        setAvgDailyMRR(avgDailyMRR);
+        setMrrTrajectory(mrrTrajectory);
+        const revenueTrendData = aggregateRevenueByDay(users);
+        console.log(revenueTrendData,'revenue trend data')
+        setRevenueTrendData(revenueTrendData);
       })
       .catch(error => {
         console.error('Error fetching users:', error);
       });
+  };
+  
+  const calculateTotalRevenue = (users) => {
+    return users.reduce((sum, user) => {
+      const { product_id } = user;
+      const { price } = getProductPriceAndStyle(product_id);
+      return sum + parseFloat(price.replace('$', '').replace(',', ''));
+    }, 0);
+  };
+  
+  const calculateMRR = (totalRevenue, startDate, endDate) => {
+    const workdays = calculateWorkdays(startDate, endDate);
+    const avgDailyMRR = workdays > 0 ? totalRevenue / workdays : 0;
+    const mrrTrajectory = avgDailyMRR * 22; // Assuming 22 workdays in a month
+    return { avgDailyMRR, mrrTrajectory };
+  };
+
+  const calculateWorkdays = (startDate, endDate) => {
+    let count = 0;
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dayOfWeek = currentDate.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Skip Sunday (0) and Saturday (6)
+        count++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return count;
   };
 
   const parseRelativeTime = (relativeTime) => {
@@ -124,6 +164,7 @@ export default function Home() {
     console.log('Sorted users:', sortedUsers);
     setFilteredUsers(sortedUsers);
   };
+
   const getProductPriceAndStyle = (productId) => {
     switch (productId) {
       case 'prod_NC25k0PnePTpDK':
@@ -138,12 +179,13 @@ export default function Home() {
       case 'prod_OvDkzhKINbc38T':
       case 'prod_M6IyfUy0ONYSIw':
         return { price: '$97', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Bronze
-        default:
+      default:
       case 'prod_M6Iy3zjRHbDmm8':
-        console.log(productId,'productid')
+        console.log(productId, 'productid')
         return { price: '$45', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Default Bronze
     }
   };
+
   const renderTable = () => {
     return filteredUsers.map(user => {
       const { price, style } = getProductPriceAndStyle(user.product_id);
@@ -176,7 +218,7 @@ export default function Home() {
       );
     });
   };
-  
+
   const getStatusBgColor = (status) => {
     if (!status) return 'bg-gray-400/10 text-gray-400';
     switch (status.toLowerCase()) {
@@ -192,7 +234,6 @@ export default function Home() {
         return 'bg-gray-400/10 text-gray-400';
     }
   };
-  
 
   const updateCards = (filteredUsers) => {
     console.log('Updating cards with filtered users:', filteredUsers);
@@ -235,14 +276,15 @@ export default function Home() {
   };
 
   const aggregateDataByDay = (data, field) => {
-    console.log('Aggregating data by day for field:', field);
     const aggregatedData = {};
-    data.forEach(user => {
-      const date = new Date(user.relative_created_time).toISOString().split('T')[0];
+    data.forEach(item => {
+      const date = new Date(item.relative_created_time).toISOString().split('T')[0];
       if (!aggregatedData[date]) {
         aggregatedData[date] = 0;
       }
-      aggregatedData[date] += user[field] ? 1 : 0;
+      if (item[field]) {
+        aggregatedData[date] += 1;
+      }
     });
     const result = Object.keys(aggregatedData)
       .map(date => ({
@@ -250,11 +292,29 @@ export default function Home() {
         value: aggregatedData[date],
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-    console.log('Aggregated data:', result);
     return result;
   };
 
-  
+  const aggregateRevenueByDay = (users) => {
+    const aggregatedData = {};
+    users.forEach(user => {
+      const date = new Date(user.relative_created_time).toISOString().split('T')[0];
+      const { product_id } = user;
+      const { price } = getProductPriceAndStyle(product_id);
+      if (!aggregatedData[date]) {
+        aggregatedData[date] = 0;
+      }
+      aggregatedData[date] += parseFloat(price.replace('$', '').replace(',', ''));
+    });
+    const result = Object.keys(aggregatedData)
+      .map(date => ({
+        date,
+        value: aggregatedData[date],
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    return result;
+  };
+
   const StatCard = ({ title, value, subtitle, trendData, showGraph }) => {
     const statusClasses = {
       'Active': 'bg-green-600',
@@ -286,6 +346,7 @@ export default function Home() {
     );
   };
 
+  
   const TrendGraph = ({ data }) => (
     <ResponsiveContainer width="100%" height={100}>
       <LineChart data={data}>
@@ -295,9 +356,9 @@ export default function Home() {
           tickFormatter={(tick) => formatDate(tick)}
           ticks={[data[0]?.date, data[data.length - 1]?.date]}
         />
-        <YAxis tickFormatter={(tick) => tick} />
+        <YAxis tickFormatter={(tick) => formatCurrency(tick)} />
         <Tooltip
-          formatter={(value) => value}
+          formatter={(value) => formatCurrency(value)}
           labelFormatter={(label) => formatDate(label)}
         />
         <Line type="monotone" dataKey="value" stroke="#0072c6" dot={false} />
@@ -308,6 +369,13 @@ export default function Home() {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString('default', { month: 'short', day: 'numeric' });
+  };
+
+  const formatCurrency = (value) => {
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(1)}K`;
+    }
+    return `$${value.toLocaleString()}`;
   };
 
   const formatStatus = (status) => {
@@ -406,13 +474,16 @@ export default function Home() {
             </div>
           </div>
           <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
-            <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
-            <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
-            <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-            <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-            <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-            <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-          </dl>
+  <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
+  <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
+  <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+  <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+  <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+  <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+  <StatCard title="Total Revenue" value={formatCurrency(totalRevenue)} subtitle={`Sum of all revenue`} trendData={revenueTrendData} showGraph={true} />
+  <StatCard title="Avg. Daily MRR Increase" value={formatCurrency(avgDailyMRR)} subtitle={`Average daily MRR increase`} trendData={revenueTrendData} showGraph={true} />
+  <StatCard title="MRR Increase Trajectory" value={formatCurrency(mrrTrajectory)} subtitle={`Projected monthly MRR increase`} trendData={revenueTrendData} showGraph={true} />
+</dl>
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 bg-white-100">
@@ -440,53 +511,60 @@ export default function Home() {
           </div>
         </div>
       )}
-      
-
-      
-<style jsx>{`
-  th, td {
-    padding: 0.5rem 0.75rem; /* Adjust padding to make columns less spaced apart */
-  }
-  th {
-    font-size: 0.75rem; /* Smaller text for table headers */
-    white-space: normal; /* Allow text to wrap onto two lines */
-  }
-  .location-name {
-    font-size: 0.875rem; /* Smaller text for location name */
-  }
-  .status-dot {
-    display: inline-block;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    margin-right: 0.5rem;
-  }
-  .text-green-600 {
-    color: #16a34a;
-  }
-  @media (max-width: 640px) {
-    .flex-col {
-      flex-direction: column;
-    }
-    .table-auto {
-      display: block;
-      overflow-x: auto;
-      white-space: nowrap;
-    }
-    .table-auto th, .table-auto td {
-      display: inline-block;
-      width: auto;
-    }
-    th, td {
-      font-size: 0.75rem; /* Smaller text for table data */
-    }
-    .hidden {
-      display: none;
-    }
-  }
-`}</style>
+      <style jsx>{`
+        th, td {
+          padding: 0.5rem 0.75rem; /* Adjust padding to make columns less spaced apart */
+        }
+        th {
+          font-size: 0.75rem; /* Smaller text for table headers */
+          white-space: normal; /* Allow text to wrap onto two lines */
+        }
+        .location-name {
+          font-size: 0.875rem; /* Smaller text for location name */
+        }
+        .status-dot {
+          display: inline-block;
+          width: 0.5rem;
+          height: 0.5rem;
+          border-radius: 50%;
+          margin-right: 0.5rem;
+        }
+        .text-green-600 {
+          color: #16a34a;
+        }
+        @media (max-width: 640px) {
+          .flex-col {
+            flex-direction: column;
+          }
+          .table-auto {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+          }
+          .table-auto th, .table-auto td {
+            display: inline-block;
+            width: auto;
+          }
+          th, td {
+            font-size: 0.75rem; /* Smaller text for table data */
+          }
+          .hidden {
+            display: none;
+          }
+        }
+      `}</style>
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
 
 
