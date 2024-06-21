@@ -39,6 +39,7 @@ export default function Home() {
     trialingCount: '0 of 0',
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedRange, setSelectedRange] = useState('1W');
 
   useEffect(() => {
     console.log('Fetching data for date range:', startDate, endDate);
@@ -129,7 +130,7 @@ export default function Home() {
       <TableRow key={user.location_id}>
         <TableCell>
           <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900 location-name">
-            {user.location_name.length > 15 ? `${user.location_name.substring(0, 15)}...` : user.location_name.replace("'s Account", '').trim()}
+            {user.location_name.replace("'s Account", '').replace('Account', '').trim().length > 15 ? `${user.location_name.replace("'s Account", '').replace('Account', '').trim().substring(0, 15)}...` : user.location_name.replace("'s Account", '').replace('Account', '').trim()}
           </a>
           <div className="text-xs text-gray-500">
             {formatDate(user.relative_created_time)} <span className={`text-xs font-semibold ${user.account_status === 'Active' ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100'}`}>{formatAccountStatus(user.account_status)}</span>
@@ -218,7 +219,7 @@ export default function Home() {
     ) : (
       title
     );
-    const textColor = (title === 'MailGun Connected' || title === 'Payment Processor Connected') ? 'text-green-600' : 'text-gray-900';
+    const textColor = (title === 'MailGun' || title === 'Payment Int.') ? 'text-green-600' : 'text-gray-900';
     return (
       <div className="flex flex-col bg-white p-4 shadow rounded-md">
         <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{formattedTitle}</dt>
@@ -269,6 +270,7 @@ export default function Home() {
   };
 
   const handleDateRangeChange = (range) => {
+    setSelectedRange(range);
     const now = new Date();
     let start, end;
     switch (range) {
@@ -318,7 +320,7 @@ export default function Home() {
         <button
           key={range}
           onClick={() => handleDateRangeChange(range)}
-          className="text-sm font-semibold text-gray-900 px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
+          className={`text-sm font-semibold px-3 py-1 rounded-md ${selectedRange === range ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
         >
           {range}
         </button>
@@ -337,9 +339,21 @@ export default function Home() {
           </div>
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
             <Button className="mb-4 sm:mb-0" onClick={() => setIsSidebarOpen(true)}>Filters</Button>
-            <DateRangeSelector />
+            <div className="hidden sm:block">
+              <SalesDatePicker
+                startDate={startDate}
+                setStartDate={setStartDate}
+                endDate={endDate}
+                setEndDate={setEndDate}
+                fetchSalesData={fetchData}
+              />
+            </div>
+            <div className="block sm:hidden w-full">
+              <DateRangeSelector />
+              <hr className="mt-2 mb-4 border-t border-gray-300" />
+            </div>
           </div>
-          <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
+          <dl           className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
             <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
             <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
             <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
