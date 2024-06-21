@@ -5,9 +5,14 @@ import { Avatar } from '@/components/avatar';
 import { Button } from '@/components/button';
 import { Heading } from '@/components/heading';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function SalesDataFetcher() {
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return date;
+  });
   const [endDate, setEndDate] = useState(new Date());
   const [data, setData] = useState([]);
   const [groupedData, setGroupedData] = useState([]);
@@ -25,7 +30,9 @@ export default function SalesDataFetcher() {
   });
 
   useEffect(() => {
-    fetchSalesData(startDate, endDate);
+    if (startDate && endDate) {
+      fetchSalesData(startDate, endDate);
+    }
   }, [startDate, endDate]);
 
   const fetchSalesData = async (start, end) => {
@@ -42,6 +49,7 @@ export default function SalesDataFetcher() {
         return;
       }
       const data = await response.json();
+      console.log(data, 'data');
       processSalesData(data);
     } catch (error) {
       console.error('Failed to fetch sales data:', error);
@@ -89,6 +97,7 @@ export default function SalesDataFetcher() {
         }
       });
     });
+    console.log('Detailed Data:', detailedData);
 
     const aggregatedSourceCounts = {};
     Object.values(sourceCounts).forEach(source => {
@@ -131,30 +140,55 @@ export default function SalesDataFetcher() {
     return count;
   };
 
-  const formatCurrency = (value) => `$${value.toLocaleString()}`;
+  const formatCurrency = (value) => {
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(1)}K`;
+    }
+    return `$${value.toLocaleString()}`;
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toDateString() + ' ' + date.toTimeString().split(' ')[0].slice(0, 5);
+    return date.toLocaleString('default', { month: 'short', day: 'numeric' });
+  };
+
+  const aggregateSalesByDay = (data) => {
+    const aggregatedData = {};
+    data.forEach(item => {
+      const date = new Date(item.saleDate).toISOString().split('T')[0]; // Ensure date is in YYYY-MM-DD format
+      if (!aggregatedData[date]) {
+        aggregatedData[date] = 0;
+      }
+      aggregatedData[date] += item.price;
+    });
+
+    // Convert the aggregated data to an array and sort by date
+    return Object.keys(aggregatedData)
+      .map(date => ({
+        date,
+        value: aggregatedData[date],
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date
   };
 
   return (
     <>
-      <div className="bg-gray-100 py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="bg-gray-100 py-12 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 lg:px-6">
           <div className="mx-auto max-w-2xl lg:max-w-none text-center">
             <Heading className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Sales Data</Heading>
             <p className="mt-4 text-lg leading-8 text-gray-600">Overview of sales data based on the selected date range.</p>
           </div>
-          <dl className="mt-16 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-5">
-            <StatCard title="Total" value={totals.totalRevenue} subtitle={`Sales Amount: ${totals.totalSalesAmount}`} />
-            <StatCard title="Demo Completed" value={totals.demoCompletedRevenue} subtitle={`Sales Amount: ${totals.demoCompletedSalesAmount}`} />
-            <StatCard title="No Demo Completed" value={totals.noDemoCompletedRevenue} subtitle={`Sales Amount: ${totals.noDemoCompletedSalesAmount}`} />
-            <StatCard title="Avg. Daily MRR Increase" value={totals.avgDailyMRR} />
-            <StatCard title="MRR Increase Trajectory" value={totals.mrrTrajectory} />
+          <dl className="mt-8 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
+            <StatCard title="Total" value={totals.totalRevenue} subtitle={`Sales Amount: ${totals.totalSalesAmount}`} trendData={aggregateSalesByDay(detailedData)} />
+            <StatCard title="Demo Completed" value={totals.demoCompletedRevenue} subtitle={`Sales Amount: ${totals.demoCompletedSalesAmount}`} trendData={aggregateSalesByDay(detailedData.filter(item => item.demoCompleted === "Yes"))} />
+            <StatCard title="No Demo Completed" value={totals.noDemoCompletedRevenue} subtitle={`Sales Amount: ${totals.noDemoCompletedSalesAmount}`} trendData={aggregateSalesByDay(detailedData.filter(item => item.demoCompleted === "No"))} />
+            <StatCard title="Avg. Daily MRR Increase" value={totals.avgDailyMRR} trendData={aggregateSalesByDay(detailedData)} />
+            <StatCard title="MRR Increase Trajectory" value={totals.mrrTrajectory} trendData={aggregateSalesByDay(detailedData)} />
           </dl>
         </div>
       </div>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6">
         <div className="mx-auto max-w-3xl">
           <SalesDatePicker
             startDate={startDate}
@@ -170,20 +204,53 @@ export default function SalesDataFetcher() {
     </>
   );
 }
-const formatCurrency = (value) => `$${value.toLocaleString()}`;
 
-const StatCard = ({ title, value, subtitle }) => (
-  <div className="flex flex-col bg-white p-8 shadow rounded-md">
-    <dt className="text-sm font-semibold leading-6 text-gray-600">{title}</dt>
-    <dd className="order-first text-3xl font-semibold tracking-tight text-gray-900">{formatCurrency(value)}</dd>
-    {subtitle && <dd className="text-sm font-semibold leading-6 text-gray-600">{subtitle}</dd>}
+const StatCard = ({ title, value, subtitle, trendData }) => (
+  <div className="flex flex-col bg-white p-4 shadow rounded-md">
+    <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{title}</dt>
+    <dd className="text-2xl font-bold tracking-tight text-gray-900 mt-1 text-left">{formatCurrency(value)}</dd>
+    {subtitle && <dd className="text-sm text-gray-600 mt-1 text-left">{subtitle}</dd>}
+    <div className="flex-grow w-full">
+      <TrendGraph data={trendData} />
+    </div>
   </div>
 );
 
+const TrendGraph = ({ data }) => {
+  console.log('TrendGraph data:', data); // Debugging line to check the data
+  return (
+    <ResponsiveContainer width="100%" height={100}>
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis
+          dataKey="date"
+          tickFormatter={(tick) => formatDate(tick)}
+          ticks={[data[0]?.date, data[data.length - 1]?.date]} // Show only start and end dates
+        />
+        <YAxis tickFormatter={(tick) => formatCurrency(tick)} />
+        <Tooltip />
+        <Line type="monotone" dataKey="value" stroke="#0072c6" dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+};
+
+const formatCurrency = (value) => {
+  if (value >= 1000) {
+    return `$${(value / 1000).toFixed(1)}K`;
+  }
+  return `$${value.toLocaleString()}`;
+};
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleString('default', { month: 'short', day: 'numeric' });
+};
+
 const DataTable = ({ title, data, columns }) => (
-  <div className="mt-8">
+  <div className="mt-4">
     <Heading className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">{title}</Heading>
-    <Table className="mt-4 [--gutter:theme(spacing.6)] lg:[--gutter:theme(spacing.10)]">
+    <Table className="mt-2 [--gutter:theme(spacing.4)] lg:[--gutter:theme(spacing.6)]">
       <TableHead>
         <TableRow>
           {columns.map((col, index) => (
@@ -204,5 +271,5 @@ const DataTable = ({ title, data, columns }) => (
   </div>
 );
 
-const groupedColumns = ["Product Name", "Price", "Demo Completed", "Total Revenue", "Sales Amount"];
-const detailedColumns = ["Sale Date", "Email", "Product Name", "Price", "Demo Completed", "Sources"];
+const groupedColumns = ["Product Name", "Price", "Demo Completed", "Total_Revenue", "Sales_Amount"];
+const detailedColumns = ["saleDate", "email", "productName", "price", "demoCompleted", "source"];

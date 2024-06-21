@@ -40,6 +40,7 @@ export default function SalesDataFetcher() {
       body: JSON.stringify({ start_date: startDate, end_date: endDate }),
     });
     const data = await response.json();
+    console.log(data,'data')
     processSalesData(data);
   };
 

@@ -129,14 +129,14 @@ export function ApplicationLayout({ events, children }) {
                 <SidebarLabel>Levi Tracking</SidebarLabel>
               </SidebarItem>
             </SidebarSection>
-            <SidebarSection className="max-lg:hidden">
+            {/* <SidebarSection className="max-lg:hidden">
               <SidebarHeading>Upcoming Events</SidebarHeading>
               {events.map((event) => (
                 <SidebarItem key={event.id} href={event.url}>
                   {event.name}
                 </SidebarItem>
               ))}
-            </SidebarSection>
+            </SidebarSection> */}
             <SidebarSpacer />
             <SidebarSection>
               <SidebarItem href="#">
