@@ -1,280 +1,139 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import SalesDatePicker from './SalesDatePicker';
-import { Avatar } from '@/components/avatar';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { Button } from '@/components/button';
-import { Heading } from '@/components/heading';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function SalesDataFetcher() {
-  const [startDate, setStartDate] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 7);
-    return date;
-  });
-  const [endDate, setEndDate] = useState(new Date());
-  const [data, setData] = useState([]);
-  const [groupedData, setGroupedData] = useState([]);
-  const [detailedData, setDetailedData] = useState([]);
-  const [sourceCounts, setSourceCounts] = useState({});
-  const [totals, setTotals] = useState({
-    totalRevenue: 0,
-    totalSalesAmount: 0,
-    demoCompletedRevenue: 0,
-    demoCompletedSalesAmount: 0,
-    noDemoCompletedRevenue: 0,
-    noDemoCompletedSalesAmount: 0,
-    avgDailyMRR: 0,
-    mrrTrajectory: 0,
-  });
+const dateRanges = [
+  { label: 'Today', value: 'today' },
+  { label: 'Last 7 days', value: 'last7days' },
+  { label: 'Last 4 weeks', value: 'last4weeks' },
+  { label: 'Last 3 months', value: 'last3months' },
+  { label: 'Last 12 months', value: 'last12months' },
+  { label: 'Month to date', value: 'monthtodate' },
+  { label: 'Quarter to date', value: 'quartertodate' },
+  { label: 'Year to date', value: 'yeartodate' },
+  { label: 'All time', value: 'alltime' },
+];
+
+const SalesDatePicker = ({ startDate, setStartDate, endDate, setEndDate, fetchSalesData }) => {
+  const [selectedRange, setSelectedRange] = useState('monthtodate');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
-    if (startDate && endDate) {
-      fetchSalesData(startDate, endDate);
+    handleRangeChange('monthtodate');
+  }, []);
+
+  const handleRangeChange = (range) => {
+    setSelectedRange(range);
+    // Set the dates based on the selected range
+    const today = new Date();
+    let start, end;
+
+    switch (range) {
+      case 'today':
+        start = end = today;
+        break;
+      case 'last7days':
+        start = new Date(today.setDate(today.getDate() - 7));
+        end = new Date();
+        break;
+      case 'last4weeks':
+        start = new Date(today.setDate(today.getDate() - 28));
+        end = new Date();
+        break;
+      case 'last3months':
+        start = new Date(today.setMonth(today.getMonth() - 3));
+        end = new Date();
+        break;
+      case 'last12months':
+        start = new Date(today.setFullYear(today.getFullYear() - 1));
+        end = new Date();
+        break;
+      case 'monthtodate':
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = new Date();
+        break;
+      case 'quartertodate':
+        start = new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
+        end = new Date();
+        break;
+      case 'yeartodate':
+        start = new Date(today.getFullYear(), 0, 1);
+        end = new Date();
+        break;
+      case 'alltime':
+        start = new Date(2000, 0, 1); // Arbitrary old date
+        end = new Date();
+        break;
+      default:
+        start = end = new Date();
     }
-  }, [startDate, endDate]);
 
-  const fetchSalesData = async (start, end) => {
-    try {
-      const response = await fetch('https://wse6p5xqvwvjqwjdzo5qphqkue0titsh.lambda-url.us-west-2.on.aws/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ start_date: start.toISOString().split('T')[0], end_date: end.toISOString().split('T')[0] }),
-      });
-      if (response.status === 429) {
-        console.error('Too many requests. Please try again later.');
-        return;
-      }
-      const data = await response.json();
-      console.log(data, 'data');
-      processSalesData(data);
-    } catch (error) {
-      console.error('Failed to fetch sales data:', error);
-    }
+    setStartDate(start);
+    setEndDate(end);
+    fetchSalesData(start, end);
   };
 
-  const processSalesData = (data) => {
-    let totalRevenue = 0;
-    let totalSalesAmount = 0;
-    let demoCompletedRevenue = 0;
-    let demoCompletedSalesAmount = 0;
-    let noDemoCompletedRevenue = 0;
-    let noDemoCompletedSalesAmount = 0;
-    const sourceCounts = {};
-    const groupedData = data.filter(item => {
-      if (item["Product Name"] === "Demo Completed Totals") {
-        demoCompletedRevenue = item.Total_Revenue;
-        demoCompletedSalesAmount = item.Sales_Amount;
-        return false;
-      } else if (item["Product Name"] === "No Demo Completed Totals") {
-        noDemoCompletedRevenue = item.Total_Revenue;
-        noDemoCompletedSalesAmount = item.Sales_Amount;
-        return false;
-      } else if (item["Product Name"] === "All Totals") {
-        totalRevenue = item.Total_Revenue;
-        totalSalesAmount = item.Sales_Amount;
-        return false;
-      }
-      return true;
-    });
-
-    const detailedData = [];
-    data.forEach(item => {
-      item.Emails.forEach((email, index) => {
-        detailedData.push({
-          saleDate: item["Sale Dates"][index],
-          email,
-          productName: item["Product Name"],
-          price: item["Price"],
-          demoCompleted: item["Demo Completed"],
-          source: item["Sources"][index],
-        });
-        if (!sourceCounts[email]) {
-          sourceCounts[email] = item["Sources"][index];
-        }
-      });
-    });
-    console.log('Detailed Data:', detailedData);
-
-    const aggregatedSourceCounts = {};
-    Object.values(sourceCounts).forEach(source => {
-      if (aggregatedSourceCounts[source]) {
-        aggregatedSourceCounts[source]++;
-      } else {
-        aggregatedSourceCounts[source] = 1;
-      }
-    });
-
-    const workdays = calculateWorkdays(new Date(startDate), new Date(endDate));
-    const avgDailyMRR = workdays > 0 ? totalRevenue / workdays : 0;
-    const mrrTrajectory = avgDailyMRR * 22; // Assuming 22 workdays in a month
-
-    setTotals({
-      totalRevenue,
-      totalSalesAmount,
-      demoCompletedRevenue,
-      demoCompletedSalesAmount,
-      noDemoCompletedRevenue,
-      noDemoCompletedSalesAmount,
-      avgDailyMRR,
-      mrrTrajectory,
-    });
-    setGroupedData(groupedData);
-    setDetailedData(detailedData);
-    setSourceCounts(aggregatedSourceCounts);
-  };
-
-  const calculateWorkdays = (startDate, endDate) => {
-    let count = 0;
-    const currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
-      const dayOfWeek = currentDate.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Skip Sunday (0) and Saturday (6)
-        count++;
-      }
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-    return count;
-  };
-
-  const formatCurrency = (value) => {
-    if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`;
-    }
-    return `$${value.toLocaleString()}`;
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('default', { month: 'short', day: 'numeric' });
-  };
-
-  const aggregateSalesByDay = (data) => {
-    const aggregatedData = {};
-    data.forEach(item => {
-      const date = new Date(item.saleDate).toISOString().split('T')[0]; // Ensure date is in YYYY-MM-DD format
-      if (!aggregatedData[date]) {
-        aggregatedData[date] = 0;
-      }
-      aggregatedData[date] += item.price;
-    });
-
-    // Convert the aggregated data to an array and sort by date
-    return Object.keys(aggregatedData)
-      .map(date => ({
-        date,
-        value: aggregatedData[date],
-      }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
   };
 
   return (
-    <>
-      <div className="bg-gray-100 py-12 sm:py-16">
-        <div className="mx-auto max-w-7xl px-4 lg:px-6">
-          <div className="text-left">
-            <Heading className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Sales Data</Heading>
-            <p className="mt-4 text-lg leading-8 text-gray-600">Overview of sales data based on the selected date range.</p>
-            <hr className="mt-4 mb-8 border-t border-gray-300" />
+    <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+      <div className="relative inline-block text-left w-full md:w-auto">
+        <div>
+          <button
+            type="button"
+            className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            id="menu-button"
+            aria-expanded={dropdownOpen}
+            aria-haspopup="true"
+            onClick={toggleDropdown}
+          >
+            {dateRanges.find(range => range.value === selectedRange)?.label}
+            <svg className="-mr-1 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+              <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+        {dropdownOpen && (
+          <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabIndex="-1">
+            <div className="py-1" role="none">
+              {dateRanges.map((range) => (
+                <a
+                  href="#"
+                  key={range.value}
+                  className={`block px-4 py-2 text-sm ${selectedRange === range.value ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`}
+                  role="menuitem"
+                  tabIndex="-1"
+                  onClick={() => {
+                    handleRangeChange(range.value);
+                    setDropdownOpen(false);
+                  }}
+                >
+                  {range.label}
+                </a>
+              ))}
+            </div>
           </div>
-          <dl className="mt-8 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
-            <StatCard title="Total" value={totals.totalRevenue} subtitle={`Sales Amount: ${totals.totalSalesAmount}`} trendData={aggregateSalesByDay(detailedData)} />
-            <StatCard title="Demo Completed" value={totals.demoCompletedRevenue} subtitle={`Sales Amount: ${totals.demoCompletedSalesAmount}`} trendData={aggregateSalesByDay(detailedData.filter(item => item.demoCompleted === "Yes"))} />
-            <StatCard title="No Demo Completed" value={totals.noDemoCompletedRevenue} subtitle={`Sales Amount: ${totals.noDemoCompletedSalesAmount}`} trendData={aggregateSalesByDay(detailedData.filter(item => item.demoCompleted === "No"))} />
-            <StatCard title="Avg. Daily MRR Increase" value={totals.avgDailyMRR} trendData={aggregateSalesByDay(detailedData)} />
-            <StatCard title="MRR Increase Trajectory" value={totals.mrrTrajectory} trendData={aggregateSalesByDay(detailedData)} />
-          </dl>
-        </div>
+        )}
       </div>
-      <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6">
-        <div className="mx-auto max-w-3xl">
-          <SalesDatePicker
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            fetchSalesData={fetchSalesData}
-          />
-          <DataTable title="Grouped Data" data={groupedData} columns={groupedColumns} />
-          <DataTable title="Detailed Data" data={detailedData} columns={detailedColumns} />
-        </div>
+      <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
+        <DatePicker
+          selected={startDate}
+          onChange={(date) => setStartDate(date)}
+          className="border rounded-md px-3 py-2 w-full md:w-auto"
+        />
+        <span className="text-gray-900">to</span>
+        <DatePicker
+          selected={endDate}
+          onChange={(date) => setEndDate(date)}
+          className="border rounded-md px-3 py-2 w-full md:w-auto"
+        />
       </div>
-    </>
-  );
-}
-
-const StatCard = ({ title, value, subtitle, trendData }) => (
-  <div className="flex flex-col bg-white p-4 shadow rounded-md">
-    <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{title}</dt>
-    <dd className="text-sm text-gray-600 mt-1 text-left">{formatDate(trendData[0]?.date)}</dd>
-    <dd className="text-2xl font-bold tracking-tight text-gray-900 mt-1 text-left">{formatCurrency(value)}</dd>
-    {subtitle && <dd className="text-sm text-gray-600 mt-1 text-left">{subtitle}</dd>}
-    <div className="flex-grow w-full">
-      <TrendGraph data={trendData} />
     </div>
-  </div>
-);
-
-const TrendGraph = ({ data }) => {
-  console.log('TrendGraph data:', data); // Debugging line to check the data
-  return (
-    <ResponsiveContainer width="100%" height={100}>
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis
-          dataKey="date"
-          tickFormatter={(tick) => formatDate(tick)}
-          ticks={[data[0]?.date, data[data.length - 1]?.date]} // Show only start and end dates
-        />
-        <YAxis tickFormatter={(tick) => formatCurrency(tick)} />
-        <Tooltip
-          formatter={(value) => formatCurrency(value)}
-          labelFormatter={(label) => formatDate(label)}
-        />
-        <Line type="monotone" dataKey="value" stroke="#0072c6" dot={false} />
-      </LineChart>
-    </ResponsiveContainer>
   );
 };
 
-const formatCurrency = (value) => {
-  if (value >= 1000) {
-    return `$${(value / 1000).toFixed(1)}K`;
-  }
-  return `$${value.toLocaleString()}`;
-};
-
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  return date.toLocaleString('default', { month: 'short', day: 'numeric' });
-};
-
-const DataTable = ({ title, data, columns }) => (
-  <div className="mt-4">
-    <Heading className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">{title}</Heading>
-    <Table className="mt-2 [--gutter:theme(spacing.4)] lg:[--gutter:theme(spacing.6)]">
-      <TableHead>
-        <TableRow>
-          {columns.map((col, index) => (
-            <TableHeader key={index}>{col}</TableHeader>
-          ))}
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {data.map((item, index) => (
-          <TableRow key={index}>
-            {columns.map((col, colIndex) => (
-              <TableCell key={colIndex}>{item[col]}</TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </div>
-);
-
-const groupedColumns = ["Product Name", "Price", "Demo Completed", "Total_Revenue", "Sales_Amount"];
-const detailedColumns = ["saleDate", "email", "productName", "price", "demoCompleted", "source"];
+export default SalesDatePicker;
