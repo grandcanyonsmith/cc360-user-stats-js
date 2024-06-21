@@ -369,9 +369,9 @@ export default function Home() {
             <TableHead>
               <TableRow>
                 <TableHeader>Location Name</TableHeader>
-                <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun Connected</TableHeader>
-                <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Payment Processor</TableHeader>
-                <TableHeader className="cursor-pointer" onClick={() => handleSort('has_had_first_transaction')}>All Time $</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Pay Int</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('has_had_first_transaction')}>AllTime $</TableHeader>
               </TableRow>
             </TableHead>
             <TableBody>
