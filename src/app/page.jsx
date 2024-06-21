@@ -133,10 +133,10 @@ export default function Home() {
             {user.location_name.replace("'s Account", '').replace('Account', '').trim().length > 15 ? `${user.location_name.replace("'s Account", '').replace('Account', '').trim().substring(0, 15)}...` : user.location_name.replace("'s Account", '').replace('Account', '').trim()}
           </a>
           <div className="text-xs text-gray-500 flex items-center">
-            <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
             <div className={`flex-none rounded-full p-1 ${getStatusBgColor(user.account_status)}`}>
               <div className="h-1.5 w-1.5 rounded-full bg-current"></div>
             </div>
+            <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
             <div className="hidden sm:block ml-1">{formatAccountStatus(user.account_status)}</div>
           </div>
         </TableCell>
