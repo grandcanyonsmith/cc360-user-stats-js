@@ -55,26 +55,26 @@ export default function Home() {
         'Content-Type': 'application/json'
       }
     })
-    .then(response => {
-      console.log('Received response:', response);
-      const users = response.data.map(user => {
-        const hasIncome = parseFloat(user.income_all_time) > 0 || parseFloat(user.last_seven_day_income) > 0 || parseFloat(user.last_thirty_day_income) > 0 || parseFloat(user.last_ninety_day_income) > 0;
-        return {
-          ...user,
-          mailgun_connected: user.mailgun_connected === "true" || user.mailgun_connected === true,
-          has_had_first_transaction: hasIncome || user.has_had_first_transaction === "true" || user.has_had_first_transaction === true,
-          payment_processor_integration: user.payment_processor_integration === "True" || user.payment_processor_integration === true,
-          relative_created_time: parseRelativeTime(user.relative_created_time)
-        };
+      .then(response => {
+        console.log('Received response:', response);
+        const users = response.data.map(user => {
+          const hasIncome = parseFloat(user.income_all_time) > 0 || parseFloat(user.last_seven_day_income) > 0 || parseFloat(user.last_thirty_day_income) > 0 || parseFloat(user.last_ninety_day_income) > 0;
+          return {
+            ...user,
+            mailgun_connected: user.mailgun_connected === "true" || user.mailgun_connected === true,
+            has_had_first_transaction: hasIncome || user.has_had_first_transaction === "true" || user.has_had_first_transaction === true,
+            payment_processor_integration: user.payment_processor_integration === "True" || user.payment_processor_integration === true,
+            relative_created_time: parseRelativeTime(user.relative_created_time)
+          };
+        });
+        console.log('Processed users:', users);
+        setUsers(users);
+        setFilteredUsers(users.filter(user => user.account_status !== 'Unknown'));
+        updateCards(users.filter(user => user.account_status !== 'Unknown'));
+      })
+      .catch(error => {
+        console.error('Error fetching users:', error);
       });
-      console.log('Processed users:', users);
-      setUsers(users);
-      setFilteredUsers(users.filter(user => user.account_status !== 'Unknown'));
-      updateCards(users.filter(user => user.account_status !== 'Unknown'));
-    })
-    .catch(error => {
-      console.error('Error fetching users:', error);
-    });
   };
 
   const parseRelativeTime = (relativeTime) => {
@@ -129,7 +129,7 @@ export default function Home() {
       <TableRow key={user.location_id}>
         <TableCell>
           <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900 location-name">
-            {user.location_name.replace("'s Account", '').trim()}
+            {user.location_name.length > 15 ? `${user.location_name.substring(0, 15)}...` : user.location_name.replace("'s Account", '').trim()}
           </a>
           <div className="text-xs text-gray-500">
             {formatDate(user.relative_created_time)} <span className={`text-xs font-semibold ${user.account_status === 'Active' ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100'}`}>{formatAccountStatus(user.account_status)}</span>
@@ -210,7 +210,6 @@ export default function Home() {
       'Trialing': 'bg-blue-600',
       'Unknown': 'bg-gray-600'
     };
-  
     const formattedTitle = statusClasses[title] ? (
       <div className="flex items-center">
         <span className={`inline-block w-2 h-2 mr-2 rounded-full ${statusClasses[title]}`}></span>
@@ -219,9 +218,7 @@ export default function Home() {
     ) : (
       title
     );
-  
     const textColor = (title === 'MailGun Connected' || title === 'Payment Processor Connected') ? 'text-green-600' : 'text-gray-900';
-  
     return (
       <div className="flex flex-col bg-white p-4 shadow rounded-md">
         <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{formattedTitle}</dt>
@@ -271,9 +268,67 @@ export default function Home() {
     return <span className={`text-xs font-semibold ${statusClasses[status.toLowerCase()] || 'text-gray-600 bg-gray-100'} rounded-full`}>{formatAccountStatus(status)}</span>;
   };
 
+  const handleDateRangeChange = (range) => {
+    const now = new Date();
+    let start, end;
+    switch (range) {
+      case '1W':
+        start = new Date();
+        start.setDate(now.getDate() - 7);
+        end = now;
+        break;
+      case '4W':
+        start = new Date();
+        start.setDate(now.getDate() - 28);
+        end = now;
+        break;
+      case '1Y':
+        start = new Date();
+        start.setFullYear(now.getFullYear() - 1);
+        end = now;
+        break;
+      case 'MTD':
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = now;
+        break;
+      case 'QTD':
+        start = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+        end = now;
+        break;
+      case 'YTD':
+        start = new Date(now.getFullYear(), 0, 1);
+        end = now;
+        break;
+      case 'ALL':
+        start = new Date(0);
+        end = now;
+        break;
+      default:
+        start = new Date();
+        start.setDate(now.getDate() - 7);
+        end = now;
+    }
+    setStartDate(start);
+    setEndDate(end);
+  };
+
+  const DateRangeSelector = () => (
+    <div className="flex space-x-2">
+      {['1W', '4W', '1Y', 'MTD', 'QTD', 'YTD', 'ALL'].map(range => (
+        <button
+          key={range}
+          onClick={() => handleDateRangeChange(range)}
+          className="text-sm font-semibold text-gray-900 px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
+        >
+          {range}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <>
-      <div className="py-12 sm:py-16">
+      <div className="py-12 sm:py-16 bg-white">
         <div className="mx-auto max-w-7xl px-4 lg:px-6">
           <div className="text-left">
             <Heading className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">User Data</Heading>
@@ -282,22 +337,13 @@ export default function Home() {
           </div>
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
             <Button className="mb-4 sm:mb-0" onClick={() => setIsSidebarOpen(true)}>Filters</Button>
-            <SalesDatePicker
-              startDate={startDate}
-              setStartDate={setStartDate}
-              endDate={endDate}
-              setEndDate={setEndDate}
-              fetchSalesData={fetchData}
-            />
+            <DateRangeSelector />
           </div>
           <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
             <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
-            {/* <StatCard title="First Transaction Completed" value={stats.transactionPercentage} subtitle={stats.transactionCount} trendData={aggregateDataByDay(filteredUsers, 'has_had_first_transaction')} showGraph={true} /> */}
             <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
-            {/* <StatCard title="Average Time to Revenue" value={stats.averageTimeToRevenue} subtitle="from last week" trendData={aggregateDataByDay(filteredUsers, 'time_to_become_profitable')} showGraph={false} /> */}
             <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
             <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-            {/* <StatCard title="Unknown" value="0%" subtitle="0 of 0 from last week" trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} /> */}
             <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
             <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
           </dl>
@@ -351,6 +397,9 @@ export default function Home() {
           .table-auto th, .table-auto td {
             display: inline-block;
             width: auto;
+          }
+          th, td {
+            font-size: 0.75rem; /* Smaller text for table data */
           }
         }
       `}</style>
