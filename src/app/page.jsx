@@ -124,34 +124,57 @@ export default function Home() {
     console.log('Sorted users:', sortedUsers);
     setFilteredUsers(sortedUsers);
   };
-
+  const getProductPriceAndStyle = (productId) => {
+    switch (productId) {
+      case 'prod_NC25k0PnePTpDK':
+      case 'prod_PuhtpFfKP74tSq':
+        return { price: '$1,500', style: 'bg-gray-800 border-gray-900 text-white font-bold' }; // Platinum
+      case 'prod_PpFYdvqmj38F2I':
+        return { price: '$297', style: 'bg-yellow-200 border-yellow-400 text-yellow-800' }; // Gold
+      case 'prod_PpFXqy79vlGOIE':
+      case 'prod_PdPwwouLLJod3b':
+      case 'prod_M6IyZeJydN4vMn':
+        return { price: '$147', style: 'bg-gray-200 border-gray-400 text-gray-800' }; // Silver
+      case 'prod_OvDkzhKINbc38T':
+      case 'prod_M6IyfUy0ONYSIw':
+        return { price: '$97', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Bronze
+        default:
+      case 'prod_M6Iy3zjRHbDmm8':
+        console.log(productId,'productid')
+        return { price: '$45', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Default Bronze
+    }
+  };
   const renderTable = () => {
-    return filteredUsers.map(user => (
-      <TableRow key={user.location_id}>
-        <TableCell>
-          <div className="flex items-center">
-            <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900 location-name">
-              {user.location_name.replace("'s Account", '').replace('Account', '').trim().length > 15 ? `${user.location_name.replace("'s Account", '').replace('Account', '').trim().substring(0, 15)}...` : user.location_name.replace("'s Account", '').replace('Account', '').trim()}
-            </a>
-            <a href={user.contact_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-gray-500 hover:text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            </a>
-          </div>
-          <div className="text-xs text-gray-500 flex items-center">
-            <div className={`flex-none rounded-full p-1 ${getStatusBgColor(user.account_status)}`}>
-              <div className="h-1.5 w-1.5 rounded-full bg-current"></div>
+    return filteredUsers.map(user => {
+      const { price, style } = getProductPriceAndStyle(user.product_id);
+      return (
+        <TableRow key={user.location_id}>
+          <TableCell>
+            <div className="flex items-center">
+              <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900 location-name">
+                {user.location_name.replace("'s Account", '').replace('Account', '').trim().length > 15 ? `${user.location_name.replace("'s Account", '').replace('Account', '').trim().substring(0, 15)}...` : user.location_name.replace("'s Account", '').replace('Account', '').trim()}
+              </a>
+              <a href={user.contact_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+              </a>
             </div>
-            <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
-            <div className="hidden sm:block ml-2">{formatAccountStatus(user.account_status)}</div>
-          </div>
-        </TableCell>
-        <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
-        <TableCell><span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
-        {/* <TableCell><span className={`text-xs font-semibold ${user.has_had_first_transaction ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatFirstTransaction(user.has_had_first_transaction, user.income_all_time)}</span></TableCell> */}
-      </TableRow>
-    ));
+            <div className="text-xs text-gray-500 flex items-center">
+              <div className={`flex-none rounded-full p-1 ${getStatusBgColor(user.account_status)}`}>
+                <div className="h-1.5 w-1.5 rounded-full bg-current"></div>
+              </div>
+              <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
+              <div className="hidden sm:block ml-2">{formatAccountStatus(user.account_status)}</div>
+              <div className={`ml-2 px-2 py-1 rounded-md border ${style}`}>{price}</div>
+            </div>
+          </TableCell>
+          <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
+          <TableCell><span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
+          {/* <TableCell><span className={`text-xs font-semibold ${user.has_had_first_transaction ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatFirstTransaction(user.has_had_first_transaction, user.income_all_time)}</span></TableCell> */}
+        </TableRow>
+      );
+    });
   };
   
   const getStatusBgColor = (status) => {
