@@ -38,6 +38,10 @@ export default function Home() {
     pastDueCount: '0 of 0',
     trialingPercentage: '0%',
     trialingCount: '0 of 0',
+    demoCallPercentage: '0%',
+    demoCallCount: '0 of 0',
+    onboardingCallPercentage: '0%',
+    onboardingCallCount: '0 of 0',
   });
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [avgDailyMRR, setAvgDailyMRR] = useState(0);
@@ -218,8 +222,8 @@ export default function Home() {
           </TableCell>
           <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
           <TableCell><span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
-          <TableCell><span className={`text-xs font-semibold ${user.demo_call ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{user.demo_call ? 'True' : 'False'}</span></TableCell>
-          <TableCell><span className={`text-xs font-semibold ${user.onboarding_call ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{user.onboarding_call ? 'True' : 'False'}</span></TableCell>
+          <TableCell><span className={`text-xs font-semibold ${user.demo_call ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{user.demo_call ? 'Yes' : 'No'}</span></TableCell>
+          <TableCell><span className={`text-xs font-semibold ${user.onboarding_call ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{user.onboarding_call ? 'Yes' : 'No'}</span></TableCell>
         </TableRow>
       );
     });
@@ -248,9 +252,13 @@ export default function Home() {
     const mailgunConnectedCount = filteredWithoutUnknown.filter(user => user.mailgun_connected).length;
     const firstTransactionCount = filteredWithoutUnknown.filter(user => user.has_had_first_transaction).length;
     const paymentProcessorCount = filteredWithoutUnknown.filter(user => user.payment_processor_integration).length;
+    const demoCallCount = filteredWithoutUnknown.filter(user => user.demo_call).length;
+    const onboardingCallCount = filteredWithoutUnknown.filter(user => user.onboarding_call).length;
     const mailgunPercentage = totalUsers ? (mailgunConnectedCount / totalUsers * 100).toFixed(2) : 0;
     const transactionPercentage = totalUsers ? (firstTransactionCount / totalUsers * 100).toFixed(2) : 0;
     const paymentProcessorPercentage = totalUsers ? (paymentProcessorCount / totalUsers * 100).toFixed(2) : 0;
+    const demoCallPercentage = totalUsers ? (demoCallCount / totalUsers * 100).toFixed(2) : 0;
+    const onboardingCallPercentage = totalUsers ? (onboardingCallCount / totalUsers * 100).toFixed(2) : 0;
     const profitableUsers = filteredWithoutUnknown.filter(user => user.has_had_first_transaction && user.time_to_become_profitable);
     const totalProfitableTime = profitableUsers.reduce((sum, user) => sum + user.time_to_become_profitable, 0);
     const averageTimeToRevenue = totalProfitableTime ? (totalProfitableTime / profitableUsers.length) / (1000 * 60 * 60 * 24) : 0;
@@ -278,6 +286,10 @@ export default function Home() {
       pastDueCount: `${pastDueCount} of ${totalUsers}`,
       trialingPercentage: `${trialingPercentage}%`,
       trialingCount: `${trialingCount} of ${totalUsers}`,
+      demoCallPercentage: `${demoCallPercentage}%`,
+      demoCallCount: `${demoCallCount} of ${totalUsers}`,
+      onboardingCallPercentage: `${onboardingCallPercentage}%`,
+      onboardingCallCount: `${onboardingCallCount} of ${totalUsers}`,
     });
   };
 
@@ -488,6 +500,8 @@ export default function Home() {
             <StatCard title="Total Revenue" value={formatCurrency(totalRevenue)} subtitle={`Sum of all revenue`} trendData={revenueTrendData} showGraph={true} />
             <StatCard title="Daily MRR" value={formatCurrency(avgDailyMRR)} subtitle={`Average Daily increase`} trendData={revenueTrendData} showGraph={true} />
             <StatCard title="MRR Trajectory" value={formatCurrency(mrrTrajectory)} subtitle={`Projected monthly increase`} trendData={revenueTrendData} showGraph={true} />
+            <StatCard title="Demo Call Scheduled" value={stats.demoCallPercentage} subtitle={stats.demoCallCount} trendData={aggregateDataByDay(filteredUsers, 'demo_call')} showGraph={true} />
+            <StatCard title="Onboarding Call Scheduled" value={stats.onboardingCallPercentage} subtitle={stats.onboardingCallCount} trendData={aggregateDataByDay(filteredUsers, 'onboarding_call')} showGraph={true} />
           </dl>
         </div>
       </div>
