@@ -64,12 +64,17 @@ export default function Home() {
         console.log('Received response:', response);
         const users = response.data.map(user => {
           const hasIncome = parseFloat(user.income_all_time) > 0 || parseFloat(user.last_seven_day_income) > 0 || parseFloat(user.last_thirty_day_income) > 0 || parseFloat(user.last_ninety_day_income) > 0;
+          if (!user.relative_created_time) {
+            console.warn('Missing relative_created_time for user:', user);
+          }
           return {
             ...user,
             mailgun_connected: user.mailgun_connected === "true" || user.mailgun_connected === true,
             has_had_first_transaction: hasIncome || user.has_had_first_transaction === "true" || user.has_had_first_transaction === true,
             payment_processor_integration: user.payment_processor_integration === "True" || user.payment_processor_integration === true,
-            relative_created_time: parseRelativeTime(user.relative_created_time)
+            relative_created_time: user.relative_created_time ? parseRelativeTime(user.relative_created_time) : new Date(), // Handle undefined relative_created_time
+            demo_call: user.demo_call ? user.demo_call.scheduled_call : false,
+            onboarding_call: user.onboarding_call ? user.onboarding_call.scheduled_call : false
           };
         });
         console.log('Processed users:', users);
@@ -82,14 +87,14 @@ export default function Home() {
         setAvgDailyMRR(avgDailyMRR);
         setMrrTrajectory(mrrTrajectory);
         const revenueTrendData = aggregateRevenueByDay(users);
-        console.log(revenueTrendData,'revenue trend data')
+        console.log(revenueTrendData, 'revenue trend data')
         setRevenueTrendData(revenueTrendData);
       })
       .catch(error => {
         console.error('Error fetching users:', error);
       });
   };
-  
+
   const calculateTotalRevenue = (users) => {
     return users.reduce((sum, user) => {
       const { product_id } = user;
@@ -97,7 +102,7 @@ export default function Home() {
       return sum + parseFloat(price.replace('$', '').replace(',', ''));
     }, 0);
   };
-  
+
   const calculateMRR = (totalRevenue, startDate, endDate) => {
     const workdays = calculateWorkdays(startDate, endDate);
     const avgDailyMRR = workdays > 0 ? totalRevenue / workdays : 0;
@@ -169,7 +174,7 @@ export default function Home() {
     switch (productId) {
       case 'prod_NC25k0PnePTpDK':
       case 'prod_PuhtpFfKP74tSq':
-        return { price: '$1,500', style: 'bg-gray-800 border-gray-900 text-white font-bold' }; // Platinum
+        return { price: '$1,500', style: 'bg-gray-800 border-blue-500 text-white font-bold' }; // Platinum
       case 'prod_PpFYdvqmj38F2I':
         return { price: '$297', style: 'bg-yellow-200 border-yellow-400 text-yellow-800' }; // Gold
       case 'prod_PpFXqy79vlGOIE':
@@ -182,7 +187,7 @@ export default function Home() {
       default:
       case 'prod_M6Iy3zjRHbDmm8':
         console.log(productId, 'productid')
-        return { price: '$45', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Default Bronze
+        return { price: '$47', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Default Bronze
     }
   };
 
@@ -213,7 +218,8 @@ export default function Home() {
           </TableCell>
           <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
           <TableCell><span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
-          {/* <TableCell><span className={`text-xs font-semibold ${user.has_had_first_transaction ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatFirstTransaction(user.has_had_first_transaction, user.income_all_time)}</span></TableCell> */}
+          <TableCell><span className={`text-xs font-semibold ${user.demo_call ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{user.demo_call ? 'True' : 'False'}</span></TableCell>
+          <TableCell><span className={`text-xs font-semibold ${user.onboarding_call ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{user.onboarding_call ? 'True' : 'False'}</span></TableCell>
         </TableRow>
       );
     });
@@ -336,7 +342,7 @@ export default function Home() {
       <div className="flex flex-col bg-white p-4 shadow rounded-md">
         <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{formattedTitle}</dt>
         <dd className={`text-2xl font-bold tracking-tight ${textColor} mt-1 text-left`}>{value}</dd>
-        {subtitle && <dd className="text-sm text-gray-600 mt-1 text-left">{subtitle}</dd>}
+        {subtitle && <dd className="text-xs text-gray-600 mt-0 text-left">{subtitle}</dd>}
         {showGraph && (
           <div className="flex-grow w-full">
             <TrendGraph data={trendData} />
@@ -346,7 +352,6 @@ export default function Home() {
     );
   };
 
-  
   const TrendGraph = ({ data }) => (
     <ResponsiveContainer width="100%" height={100}>
       <LineChart data={data}>
@@ -474,16 +479,16 @@ export default function Home() {
             </div>
           </div>
           <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
-  <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
-  <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
-  <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-  <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-  <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-  <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-  <StatCard title="Total Revenue" value={formatCurrency(totalRevenue)} subtitle={`Sum of all revenue`} trendData={revenueTrendData} showGraph={true} />
-  <StatCard title="Avg. Daily MRR Increase" value={formatCurrency(avgDailyMRR)} subtitle={`Average daily MRR increase`} trendData={revenueTrendData} showGraph={true} />
-  <StatCard title="MRR Increase Trajectory" value={formatCurrency(mrrTrajectory)} subtitle={`Projected monthly MRR increase`} trendData={revenueTrendData} showGraph={true} />
-</dl>
+            <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
+            <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
+            <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+            <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+            <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+            <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
+            <StatCard title="Total Revenue" value={formatCurrency(totalRevenue)} subtitle={`Sum of all revenue`} trendData={revenueTrendData} showGraph={true} />
+            <StatCard title="Daily MRR" value={formatCurrency(avgDailyMRR)} subtitle={`Average Daily increase`} trendData={revenueTrendData} showGraph={true} />
+            <StatCard title="MRR Trajectory" value={formatCurrency(mrrTrajectory)} subtitle={`Projected monthly increase`} trendData={revenueTrendData} showGraph={true} />
+          </dl>
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 bg-white-100">
@@ -494,7 +499,8 @@ export default function Home() {
                 <TableHeader>Location Name</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Pay Int</TableHeader>
-                {/* <TableHeader className="cursor-pointer" onClick={() => handleSort('has_had_first_transaction')}>AllTime $</TableHeader> */}
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('demo_call')}>Demo</TableHeader>
+                <TableHeader className="cursor-pointer" onClick={() => handleSort('onboarding_call')}>Onboarding</TableHeader>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -556,15 +562,3 @@ export default function Home() {
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
