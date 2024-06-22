@@ -57,6 +57,7 @@ export default function Home() {
         paymentProcessor: 'all',
         demoCompleted: 'all',
         onboardingCompleted: 'all',
+        plan: 'all',
         status: ['active', 'trialing', 'past_due', 'canceled']
     });
 
@@ -196,18 +197,18 @@ export default function Home() {
             case 'prod_PuhtpFfKP74tSq':
                 return { price: '$1,500', style: 'bg-gray-800 border-blue-500 text-white font-bold' }; // Platinum
             case 'prod_PpFYdvqmj38F2I':
-                return { price: '$297', style: 'bg-yellow-200 border-yellow-400 text-yellow-800' }; // Gold
+                return { price: '$297', style: 'bg-yellow-200 border-yellow-400 text-yellow-800' }; // Elite
             case 'prod_PpFXqy79vlGOIE':
             case 'prod_PdPwwouLLJod3b':
             case 'prod_M6IyZeJydN4vMn':
-                return { price: '$147', style: 'bg-gray-200 border-gray-400 text-gray-800' }; // Silver
+                return { price: '$147', style: 'bg-gray-200 border-gray-400 text-gray-800' }; // Premium
             case 'prod_OvDkzhKINbc38T':
             case 'prod_M6IyfUy0ONYSIw':
-                return { price: '$97', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Bronze
+                return { price: '$97', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Starter
             default:
             case 'prod_M6Iy3zjRHbDmm8':
                 console.log(productId, 'productid')
-                return { price: '$47', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Default Bronze
+                return { price: '$47', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Default Basic
         }
     };
 
@@ -491,11 +492,16 @@ export default function Home() {
               ))}
           </div>
       );
-  
-      const handleFilterChange = (filters) => {
+    
+    const handleFilterChange = (filters) => {
         setFilterState(filters);
         const filteredUsers = users.filter(user => {
             const statusMatch = filters.status.includes(user.account_status);
+            const planMatch = filters.plan === 'all' || 
+                              (filters.plan === 'platinum' && ['prod_NC25k0PnePTpDK', 'prod_PuhtpFfKP74tSq'].includes(user.product_id)) ||
+                              (filters.plan === 'prod_PpFXqy79vlGOIE' && ['prod_PpFXqy79vlGOIE', 'prod_PdPwwouLLJod3b', 'prod_M6IyZeJydN4vMn'].includes(user.product_id)) ||
+                              (filters.plan === 'prod_OvDkzhKINbc38T' && ['prod_OvDkzhKINbc38T', 'prod_M6IyfUy0ONYSIw'].includes(user.product_id)) ||
+                              filters.plan === user.product_id;
             return (filters.calendar === 'all' || (filters.calendar === 'true' && user.total_calendars > 0) || (filters.calendar === 'false' && user.total_calendars === 0)) &&
                 (filters.product === 'all' || (filters.product === 'true' && user.total_products > 0) || (filters.product === 'false' && user.total_products === 0)) &&
                 (filters.firstTransaction === 'all' || (filters.firstTransaction === 'true' && user.has_had_first_transaction) || (filters.firstTransaction === 'false' && !user.has_had_first_transaction)) &&
@@ -503,6 +509,7 @@ export default function Home() {
                 (filters.paymentProcessor === 'all' || (filters.paymentProcessor === 'True' && user.payment_processor_integration) || (filters.paymentProcessor === 'False' && !user.payment_processor_integration)) &&
                 (filters.demoCompleted === 'all' || (filters.demoCompleted === 'true' && user.demo_call) || (filters.demoCompleted === 'false' && !user.demo_call)) &&
                 (filters.onboardingCompleted === 'all' || (filters.onboardingCompleted === 'true' && user.onboarding_call) || (filters.onboardingCompleted === 'false' && !user.onboarding_call)) &&
+                planMatch &&
                 statusMatch;
         });
         setFilteredUsers(filteredUsers);
