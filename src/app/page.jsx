@@ -64,57 +64,56 @@ export default function Home() {
     useEffect(() => {
         console.log('Fetching data for date range:', startDate, endDate);
         fetchData(startDate, endDate);
-    }, [startDate, endDate]);
+      }, [startDate, endDate]);
 
-    const fetchData = (start, end) => {
+      const fetchData = (start, end) => {
         console.log('Sending request with start date:', start, 'and end date:', end);
         axios.post('https://rozduvvh2or5rxgucec3rfdp5e0hupbk.lambda-url.us-west-2.on.aws/', {
-            startDate: start.toISOString().split('T')[0],
-            endDate: end.toISOString().split('T')[0]
+          startDate: start.toISOString().split('T')[0],
+          endDate: end.toISOString().split('T')[0]
         }, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
+          headers: {
+            'Content-Type': 'application/json'
+          }
         })
         .then(response => {
-            console.log('Received response:', response);
-            if (!Array.isArray(response.data)) {
-                console.error('Expected response data to be an array, but got:', response.data);
-                return;
+          console.log('Received response:', response);
+          if (!Array.isArray(response.data)) {
+            console.error('Expected response data to be an array, but got:', response.data);
+            return;
+          }
+          const users = response.data.map(user => {
+            const hasIncome = parseFloat(user.income_all_time) > 0 || parseFloat(user.last_seven_day_income) > 0 || parseFloat(user.last_thirty_day_income) > 0 || parseFloat(user.last_ninety_day_income) > 0;
+            if (!user.relative_created_time) {
+              console.warn('Missing relative_created_time for user:', user);
             }
-
-            const users = response.data.map(user => {
-                const hasIncome = parseFloat(user.income_all_time) > 0 || parseFloat(user.last_seven_day_income) > 0 || parseFloat(user.last_thirty_day_income) > 0 || parseFloat(user.last_ninety_day_income) > 0;
-                if (!user.relative_created_time) {
-                    console.warn('Missing relative_created_time for user:', user);
-                }
-                return {
-                    ...user,
-                    mailgun_connected: user.mailgun_connected === "true" || user.mailgun_connected === true,
-                    has_had_first_transaction: hasIncome || user.has_had_first_transaction === "true" || user.has_had_first_transaction === true,
-                    payment_processor_integration: user.payment_processor_integration === "True" || user.payment_processor_integration === true,
-                    relative_created_time: user.relative_created_time ? parseRelativeTime(user.relative_created_time) : new Date(), // Handle undefined relative_created_time
-                    demo_call: user.demo_call ? user.demo_call.scheduled_call : false,
-                    onboarding_call: user.onboarding_call ? user.onboarding_call.scheduled_call : false
-                };
-            });
-            console.log('Processed users:', users);
-            setUsers(users);
-            setFilteredUsers(users.filter(user => user.account_status !== 'Unknown'));
-            updateCards(users.filter(user => user.account_status !== 'Unknown'));
-            const totalRevenue = calculateTotalRevenue(users);
-            const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, start, end);
-            setTotalRevenue(totalRevenue);
-            setAvgDailyMRR(avgDailyMRR);
-            setMrrTrajectory(mrrTrajectory);
-            const revenueTrendData = aggregateRevenueByDay(users);
-            console.log(revenueTrendData, 'revenue trend data')
-            setRevenueTrendData(revenueTrendData);
+            return {
+              ...user,
+              mailgun_connected: user.mailgun_connected === "true" || user.mailgun_connected === true,
+              has_had_first_transaction: hasIncome || user.has_had_first_transaction === "true" || user.has_had_first_transaction === true,
+              payment_processor_integration: user.payment_processor_integration === "True" || user.payment_processor_integration === true,
+              relative_created_time: user.relative_created_time ? parseRelativeTime(user.relative_created_time) : new Date(), // Handle undefined relative_created_time
+              demo_call: user.demo_call ? user.demo_call.scheduled_call : false,
+              onboarding_call: user.onboarding_call ? user.onboarding_call.scheduled_call : false
+            };
+          });
+          console.log('Processed users:', users);
+          setUsers(users);
+          setFilteredUsers(users.filter(user => user.account_status !== 'Unknown'));
+          updateCards(users.filter(user => user.account_status !== 'Unknown'));
+          const totalRevenue = calculateTotalRevenue(users);
+          const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, start, end);
+          setTotalRevenue(totalRevenue);
+          setAvgDailyMRR(avgDailyMRR);
+          setMrrTrajectory(mrrTrajectory);
+          const revenueTrendData = aggregateRevenueByDay(users);
+          console.log(revenueTrendData, 'revenue trend data')
+          setRevenueTrendData(revenueTrendData);
         })
         .catch(error => {
-            console.error('Error fetching users:', error);
+          console.error('Error fetching users:', error);
         });
-    };
+      };
 
     const calculateTotalRevenue = (users) => {
         return users.reduce((sum, user) => {
@@ -314,102 +313,120 @@ export default function Home() {
     });
   };
   
-      const aggregateDataByDay = (data, field) => {
-          if (!Array.isArray(data)) {
-              console.error('Expected data to be an array, but got:', data);
-              return [];
-          }
+  const aggregateDataByDay = (data, field) => {
+    if (!Array.isArray(data)) {
+      console.error('Expected data to be an array, but got:', data);
+      return [];
+    }
   
-          const aggregatedData = {};
-          data.forEach(item => {
-              const date = new Date(item.relative_created_time).toISOString().split('T')[0];
-              if (!aggregatedData[date]) {
-                  aggregatedData[date] = 0;
-              }
-              if (item[field]) {
-                  aggregatedData[date] += 1;
-              }
-          });
+    const aggregatedData = {};
+    const totalUsersByDay = {};
+    const runningTotal = { count: 0, total: 0 };
   
-          const result = Object.keys(aggregatedData)
-              .map(date => ({
-                  date,
-                  value: aggregatedData[date],
-              }))
-              .sort((a, b) => new Date(a.date) - new Date(b.date));
+    data.forEach(item => {
+      const date = new Date(item.relative_created_time).toISOString().split('T')[0];
   
-          return result;
-      };
+      if (!aggregatedData[date]) {
+        aggregatedData[date] = 0;
+        totalUsersByDay[date] = 0;
+      }
   
-      const aggregateRevenueByDay = (users) => {
-          const aggregatedData = {};
-          users.forEach(user => {
-              const date = new Date(user.relative_created_time).toISOString().split('T')[0];
-              const { product_id } = user;
-              const { price } = getProductPriceAndStyle(product_id);
-              if (!aggregatedData[date]) {
-                  aggregatedData[date] = 0;
-              }
-              aggregatedData[date] += parseFloat(price.replace('$', '').replace(',', ''));
-          });
-          const result = Object.keys(aggregatedData)
-              .map(date => ({
-                  date,
-                  value: aggregatedData[date],
-              }))
-              .sort((a, b) => new Date(a.date) - new Date(b.date));
-          return result;
-      };
+      totalUsersByDay[date] += 1;
   
-      const StatCard = ({ title, value, subtitle, trendData, showGraph }) => {
-          const statusClasses = {
-              'Active': 'bg-green-600',
-              'Canceled': 'bg-red-600',
-              'Past Due': 'bg-yellow-600',
-              'Trialing': 'bg-blue-600',
-              'Unknown': 'bg-gray-600'
-          };
-          const formattedTitle = statusClasses[title] ? (
-              <div className="flex items-center">
-                  <span className={`inline-block w-2 h-2 mr-2 rounded-full ${statusClasses[title]}`}></span>
-                  <span>{title}</span>
-              </div>
-          ) : (
-              title
-          );
-          const textColor = (title === 'MailGun Connected' || title === 'Payment Processor Connected') ? 'text-green-600' : 'text-gray-900';
-          return (
-              <div className="flex flex-col bg-white p-4 shadow rounded-md">
-                  <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{formattedTitle}</dt>
-                  <dd className={`text-2xl font-bold tracking-tight ${textColor} mt-1 text-left`}>{value}</dd>
-                  {subtitle && <dd className="text-xs text-gray-600 mt-0 text-left">{subtitle}</dd>}
-                  {showGraph && (
-                      <div className="flex-grow w-full">
-                          <TrendGraph data={trendData} />
-                      </div>
-                  )}
-              </div>
-          );
-      };
+      if (item[field]) {
+        aggregatedData[date] += 1;
+      }
+    });
   
-      const TrendGraph = ({ data }) => (
-          <ResponsiveContainer width="100%" height={100}>
-              <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                      dataKey="date"
-                      tickFormatter={(tick) => formatDate(tick)}
-                      ticks={[data[0]?.date, data[data.length - 1]?.date]}
-                  />
-                  <YAxis tickFormatter={(tick) => formatCurrency(tick)} />
-                  <Tooltip
-                      formatter={(value) => formatCurrency(value)}
-                      labelFormatter={(label) => formatDate(label)}
-                  />
-                  <Line type="monotone" dataKey="value" stroke="#0072c6" dot={false} />
-              </LineChart>
-          </ResponsiveContainer>
-      );
+    const result = Object.keys(aggregatedData)
+      .sort((a, b) => new Date(a) - new Date(b))
+      .map(date => {
+        runningTotal.count += totalUsersByDay[date];
+        runningTotal.total += aggregatedData[date];
+        return {
+          date,
+          value: (runningTotal.total / runningTotal.count) * 100, // Calculate running average percentage
+        };
+      });
+  
+    return result;
+  };
+  
+  const aggregateRevenueByDay = (users) => {
+    const aggregatedData = {};
+    users.forEach(user => {
+      const date = new Date(user.relative_created_time).toISOString().split('T')[0];
+      const { product_id } = user;
+      const { price } = getProductPriceAndStyle(product_id);
+      if (!aggregatedData[date]) {
+        aggregatedData[date] = 0;
+      }
+      aggregatedData[date] += parseFloat(price.replace('$', '').replace(',', ''));
+    });
+    const result = Object.keys(aggregatedData)
+      .map(date => ({
+        date,
+        value: aggregatedData[date],
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    return result;
+  };
+  
+  const StatCard = ({ title, value, subtitle, trendData, showGraph, isPercentage }) => {
+    const statusClasses = {
+      'Active': 'bg-green-600',
+      'Canceled': 'bg-red-600',
+      'Past Due': 'bg-yellow-600',
+      'Trialing': 'bg-blue-600',
+      'Unknown': 'bg-gray-600'
+    };
+  
+    const formattedTitle = statusClasses[title] ? (
+      <div className="flex items-center">
+        <span className={`inline-block w-2 h-2 mr-2 rounded-full ${statusClasses[title]}`}></span>
+        <span>{title}</span>
+      </div>
+    ) : (
+      title
+    );
+  
+    const textColor = (title === 'MailGun Connected' || title === 'Payment Processor Connected') ? 'text-green-600' : 'text-gray-900';
+  
+    return (
+      <div className="flex flex-col bg-white p-4 shadow rounded-md">
+        <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">{formattedTitle}</dt>
+        <dd className={`text-2xl font-bold tracking-tight ${textColor} mt-1 text-left`}>{value}</dd>
+        {subtitle && <dd className="text-xs text-gray-600 mt-0 text-left">{subtitle}</dd>}
+        {showGraph && (
+          <div className="flex-grow w-full">
+            <TrendGraph data={trendData} isPercentage={isPercentage} />
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  const TrendGraph = ({ data, isPercentage }) => (
+    <ResponsiveContainer width="100%" height={100}>
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis
+          dataKey="date"
+          tickFormatter={(tick) => formatDate(tick)}
+          ticks={[data[0]?.date, data[data.length - 1]?.date]}
+        />
+        <YAxis
+          tickFormatter={(tick) => isPercentage ? `${Math.round(tick)}%` : formatCurrency(tick)}
+          tick={{ fontSize: 10 }} // Make the numbers smaller
+        />
+        <Tooltip
+          formatter={(value) => isPercentage ? `${Math.round(value)}%` : formatCurrency(value)}
+          labelFormatter={(label) => formatDate(label)}
+        />
+        <Line type="monotone" dataKey="value" stroke="#0072c6" dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
   
       const formatDate = (dateString) => {
           const date = new Date(dateString);
@@ -434,63 +451,70 @@ export default function Home() {
           return <span className={`text-xs font-semibold ${statusClasses[status.toLowerCase()] || 'text-gray-600 bg-gray-100'} rounded-full`}>{formatAccountStatus(status)}</span>;
       };
   
-      const handleDateRangeChange = (range) => {
-          setSelectedRange(range);
-          const now = new Date();
-          let start, end;
-          switch (range) {
-              case '1W':
-                  start = new Date();
-                  start.setDate(now.getDate() - 7);
-                  end = now;
-                  break;
-              case '4W':
-                  start = new Date();
-                  start.setDate(now.getDate() - 28);
-                  end = now;
-                  break;
-              case '1Y':
-                  start = new Date();
-                  start.setFullYear(now.getFullYear() - 1);
-                  end = now;
-                  break;
-              case 'MTD':
-                  start = new Date(now.getFullYear(), now.getMonth(), 1);
-                  end = now;
-                  break;
-              case 'QTD':
-                  start = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
-                  end = now;
-                  break;
-              case 'YTD':
-                  start = new Date(now.getFullYear(), 0, 1);
-                  end = now;
-                  break;
-              case 'ALL':
-                  start = new Date(0);
-                  end = now;
-                  break;
-              default:
-                  start = new Date();
-                  start.setDate(now.getDate() - 7);
-                  end = now;
-          }
-          setStartDate(start);
-          setEndDate(end);
+      const handleRangeChange = (range) => {
+        setSelectedRange(range);
+        const today = new Date();
+        let start, end;
+        switch (range) {
+          case 'today':
+            start = end = today;
+            break;
+          case 'last7days':
+            start = new Date(today);
+            start.setDate(today.getDate() - 7);
+            end = new Date();
+            break;
+          case 'last4weeks':
+            start = new Date(today);
+            start.setDate(today.getDate() - 28);
+            end = new Date();
+            break;
+          case 'last3months':
+            start = new Date(today);
+            start.setMonth(today.getMonth() - 3);
+            end = new Date();
+            break;
+          case 'last12months':
+            start = new Date(today);
+            start.setFullYear(today.getFullYear() - 1);
+            end = new Date();
+            break;
+          case 'monthtodate':
+            start = new Date(today.getFullYear(), today.getMonth(), 1);
+            end = new Date();
+            break;
+          case 'quartertodate':
+            start = new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
+            end = new Date();
+            break;
+          case 'yeartodate':
+            start = new Date(today.getFullYear(), 0, 1);
+            end = new Date();
+            break;
+          case 'alltime':
+            start = new Date(2000, 0, 1); // Arbitrary old date
+            end = new Date();
+            break;
+          default:
+            start = end = new Date();
+        }
+        setStartDate(start);
+        setEndDate(end);
+        fetchSalesData(start, end);
       };
   
       const DateRangeSelector = () => (
-          <div className="flex space-x-1">
-              {['1W', '4W', '1Y', 'MTD', 'QTD', 'YTD', 'ALL'].map(range => (
-                  <button
-                      key={range}
-                      onClick={() => handleDateRangeChange(range)}
-                      className={`text-sm font-semibold px-2 py-1 rounded-md ${selectedRange === range ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
-                  >
-                      {range}
-                  </button>
-              ))}
-          </div>
+        <div className="flex space-x-1">
+          {['1W', '4W', '3M', '1Y', 'MTD', 'QTD', 'YTD', 'ALL'].map(range => (
+            <button
+              key={range}
+              onClick={() => handleDateRangeChange(range)}
+              className={`text-sm font-semibold px-2 py-1 rounded-md ${selectedRange === range ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'}`}
+            >
+              {range}
+            </button>
+          ))}
+        </div>
       );
     
     const handleFilterChange = (filters) => {
@@ -549,18 +573,19 @@ export default function Home() {
                           </div>
                       </div>
                       <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
-                          <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} />
-                          <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} />
-                          <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-                          <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-                          <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-                          <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} />
-                          <StatCard title="Total Revenue" value={formatCurrency(totalRevenue)} subtitle={`Sum of all revenue`} trendData={revenueTrendData} showGraph={true} />
-                          <StatCard title="Daily MRR" value={formatCurrency(avgDailyMRR)} subtitle={`Average Daily increase`} trendData={revenueTrendData} showGraph={true} />
-                          <StatCard title="MRR Trajectory" value={formatCurrency(mrrTrajectory)} subtitle={`Projected monthly increase`} trendData={revenueTrendData} showGraph={true} />
-                          <StatCard title="Demo Call Scheduled" value={stats.demoCallPercentage} subtitle={stats.demoCallCount} trendData={aggregateDataByDay(filteredUsers, 'demo_call')} showGraph={true} />
-                          <StatCard title="Onboarding Call Scheduled" value={stats.onboardingCallPercentage} subtitle={stats.onboardingCallCount} trendData={aggregateDataByDay(filteredUsers, 'onboarding_call')} showGraph={true} />
-                      </dl>
+  <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} isPercentage={true} />
+  <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} isPercentage={true} />
+  <StatCard title="Active" value={stats.activePercentage} subtitle={stats.activeCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} isPercentage={true} />
+  <StatCard title="Canceled" value={stats.canceledPercentage} subtitle={stats.canceledCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} isPercentage={true} />
+  <StatCard title="Past Due" value={stats.pastDuePercentage} subtitle={stats.pastDueCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} isPercentage={true} />
+  <StatCard title="Trialing" value={stats.trialingPercentage} subtitle={stats.trialingCount} trendData={aggregateDataByDay(filteredUsers, 'account_status')} showGraph={false} isPercentage={true} />
+  <StatCard title="Total Revenue" value={formatCurrency(totalRevenue)} subtitle={`Sum of all revenue`} trendData={revenueTrendData} showGraph={true} isPercentage={false} />
+  <StatCard title="Daily MRR" value={formatCurrency(avgDailyMRR)} subtitle={`Average Daily increase`} trendData={revenueTrendData} showGraph={true} isPercentage={false} />
+  <StatCard title="MRR Trajectory" value={formatCurrency(mrrTrajectory)} subtitle={`Projected monthly increase`} trendData={revenueTrendData} showGraph={true} isPercentage={false} />
+  <StatCard title="Demo Call Scheduled" value={stats.demoCallPercentage} subtitle={stats.demoCallCount} trendData={aggregateDataByDay(filteredUsers, 'demo_call')} showGraph={true} isPercentage={true} />
+  <StatCard title="Onboarding Call Scheduled" value={stats.onboardingCallPercentage} subtitle={stats.onboardingCallCount} trendData={aggregateDataByDay(filteredUsers, 'onboarding_call')} showGraph={true} isPercentage={true} />
+</dl>
+
                   </div>
               </div>
               <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 bg-white-100">
