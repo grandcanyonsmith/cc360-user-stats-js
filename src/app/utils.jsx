@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CallReportingModal from './CallReportingModal';
 
+
 export function formatIncome(income) {
     if (isNaN(parseFloat(income))) {
         return <span className="text-gray-500">$0</span>;
@@ -82,40 +83,42 @@ export function formatHasOnboardingCallScheduled(onboardingCall) {
     }
 }
 
-const formatDemoCompleted = (demoCall) => {
-    if (!demoCall || demoCall.scheduled_call === false) {
-      return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
-    } else if (demoCall.completed_call === true) {
-      return <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Yes</span>;
-    } else if (demoCall.completed_call === 'unknown' || demoCall.completed_call === undefined) {
-      return (
-        <button
-          className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20"
-          onClick={() => openReportModal('Demo', demoCall)}
-        >
-          Report
-        </button>
-      );
-    } else {
-      return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
-    }
-  };
+// export const formatDemoCompleted = (user) => {
+//     const demoCall = user.demo_call;
+//     if (!demoCall || demoCall.scheduled_call === false) {
+//       return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
+//     } else if (demoCall.completed_call === true) {
+//       return <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Yes</span>;
+//     } else if (demoCall.completed_call === 'unknown' || demoCall.completed_call === undefined) {
+//       return (
+//         <button
+//           className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20"
+//           onClick={() => openReportModal('Demo', user)}
+//         >
+//           Report
+//         </button>
+//       );
+//     } else {
+//       return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
+//     }
+//   };
 
-  const formatOnboardingCompleted = (onboardingCall) => {
-    if (!onboardingCall || onboardingCall.scheduled_call === false) {
-      return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
-    } else if (onboardingCall.completed_call === true) {
-      return <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Yes</span>;
-    } else if (onboardingCall.completed_call === 'unknown' || onboardingCall.completed_call === undefined) {
-      return (
-        <button
-          className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20"
-          onClick={() => openReportModal('Onboarding', onboardingCall)}
-        >
-          Report
-        </button>
-      );
-    } else {
-      return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
-    }
-  };
+// export  const formatOnboardingCompleted = (user) => {
+//     const onboardingCall = user.onboarding_call;
+//     if (!onboardingCall || onboardingCall.scheduled_call === false) {
+//       return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
+//     } else if (onboardingCall.completed_call === true) {
+//       return <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Yes</span>;
+//     } else if (onboardingCall.completed_call === 'unknown' || onboardingCall.completed_call === undefined) {
+//       return (
+//         <button
+//           className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20"
+//           onClick={() => openReportModal('Onboarding', user)}
+//         >
+//           Report
+//         </button>
+//       );
+//     } else {
+//       return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
+//     }
+//   };

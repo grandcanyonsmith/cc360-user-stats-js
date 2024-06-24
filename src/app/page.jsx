@@ -15,8 +15,7 @@ import {
   formatAccountStatus,
   formatHasDemoCallScheduled,
   formatHasOnboardingCallScheduled,
-  // formatDemoCompleted,
-  // formatOnboardingCompleted
+  
 } from './utils';
 import { Filters } from './Filters'; // Assuming Filters component is available
 import CallReportingModal  from './CallReportingModal'; // Import the modal component
@@ -27,9 +26,7 @@ export default function Home() {
       date.setDate(date.getDate() - 7);
       return date;
   });
-  // const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [modalCallType, setModalCallType] = useState('');
-  // const [modalUser, setModalUser] = useState(null);
+
 
   const openReportModal = (callType, user) => {
     setModalCallType(callType);
@@ -150,20 +147,7 @@ export default function Home() {
       return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
     }
   };
-  // const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
-  //   if (!isOpen) return null;
   
-  //   return (
-  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-  //       <div className="bg-white p-4 rounded shadow-lg max-w-md w-full">
-  //         <h2 className="text-xl font-bold mb-4">Report {callType} Call</h2>
-  //         <p>Reporting for user: {user.location_name}</p>
-  //         {/* Add your form or reporting details here */}
-  //         <button onClick={onClose} className="mt-4 px-4 py-2 bg-red-500 text-white rounded">Close</button>
-  //       </div>
-  //     </div>
-  //   );
-  // };
   const fetchData = (start, end) => {
     console.log('Sending request with start date:', start, 'and end date:', end);
     axios.post('https://rozduvvh2or5rxgucec3rfdp5e0hupbk.lambda-url.us-west-2.on.aws/', {
@@ -386,8 +370,8 @@ const renderTable = () => {
     const mailgunConnectedCount = filteredWithoutUnknown.filter(user => user.mailgun_connected).length;
     const firstTransactionCount = filteredWithoutUnknown.filter(user => user.has_had_first_transaction).length;
     const paymentProcessorCount = filteredWithoutUnknown.filter(user => user.payment_processor_integration).length;
-    const demoCallCount = filteredWithoutUnknown.filter(user => user.demo_call).length;
-    const onboardingCallCount = filteredWithoutUnknown.filter(user => user.onboarding_call).length;
+    const demoCallCount = filteredWithoutUnknown.filter(user => user.demo_call.scheduled_call).length;
+    const onboardingCallCount = filteredWithoutUnknown.filter(user => user.onboarding_call.scheduled_call).length;
     const mailgunPercentage = totalUsers ? (mailgunConnectedCount / totalUsers * 100).toFixed(2) : 0;
     const transactionPercentage = totalUsers ? (firstTransactionCount / totalUsers * 100).toFixed(2) : 0;
     const paymentProcessorPercentage = totalUsers ? (paymentProcessorCount / totalUsers * 100).toFixed(2) : 0;
