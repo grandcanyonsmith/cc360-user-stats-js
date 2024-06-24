@@ -5,15 +5,15 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { Button } from '@/components/button';
 
 const dateRanges = [
-  { label: 'Today', value: 'today' },
-  { label: 'Last 7 days', value: 'last7days' },
-  { label: 'Last 4 weeks', value: 'last4weeks' },
-  { label: 'Last 3 months', value: 'last3months' },
-  { label: 'Last 12 months', value: 'last12months' },
-  { label: 'Month to date', value: 'monthtodate' },
-  { label: 'Quarter to date', value: 'quartertodate' },
-  { label: 'Year to date', value: 'yeartodate' },
-  { label: 'All time', value: 'alltime' },
+ { label: 'Today', value: 'today' },
+ { label: 'Last 7 days', value: 'last7days' },
+ { label: 'Last 4 weeks', value: 'last4weeks' },
+ { label: 'Last 3 months', value: 'last3months' },
+ { label: 'Last 12 months', value: 'last12months' },
+ { label: 'Month to date', value: 'monthtodate' },
+ { label: 'Quarter to date', value: 'quartertodate' },
+ { label: 'Year to date', value: 'yeartodate' },
+ { label: 'All time', value: 'alltime' },
 ];
 
 const SalesDatePicker = ({ startDate, setStartDate, endDate, setEndDate, fetchSalesData }) => {
@@ -71,6 +71,11 @@ const SalesDatePicker = ({ startDate, setStartDate, endDate, setEndDate, fetchSa
       default:
         start = end = new Date();
     }
+
+    console.log('Selected Range:', range);
+    console.log('Start Date:', start);
+    console.log('End Date:', end);
+
     setStartDate(start);
     setEndDate(end);
     fetchSalesData(start, end);

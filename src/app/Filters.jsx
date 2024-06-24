@@ -10,8 +10,8 @@ export function Filters({ onFilterChange, users, filterState, setIsFilterPanelOp
             firstTransaction: document.querySelector('input[name="filterFirstTransaction"]:checked').value,
             mailgun: document.querySelector('input[name="filterMailgun"]:checked').value,
             paymentProcessor: document.querySelector('input[name="filterPaymentProcessor"]:checked').value,
-            demoCompleted: document.querySelector('input[name="filterDemoCompleted"]:checked').value,
-            onboardingCompleted: document.querySelector('input[name="filterOnboardingCompleted"]:checked').value,
+            demoScheduled: document.querySelector('input[name="filterDemoCompleted"]:checked').value,
+            onboardingScheduled: document.querySelector('input[name="filterOnboardingCompleted"]:checked').value,
             plan: document.querySelector('input[name="filterPlan"]:checked').value,
             status: Array.from(document.querySelectorAll('input[name="filterStatus"]:checked')).map(checkbox => checkbox.value)
         };
@@ -24,8 +24,8 @@ export function Filters({ onFilterChange, users, filterState, setIsFilterPanelOp
                 (filters.firstTransaction === 'all' || (filters.firstTransaction === 'true' && user.has_had_first_transaction) || (filters.firstTransaction === 'false' && !user.has_had_first_transaction)) &&
                 (filters.mailgun === 'all' || (filters.mailgun === 'true' && user.mailgun_connected) || (filters.mailgun === 'false' && !user.mailgun_connected)) &&
                 (filters.paymentProcessor === 'all' || (filters.paymentProcessor === 'True' && user.payment_processor_integration) || (filters.paymentProcessor === 'False' && !user.payment_processor_integration)) &&
-                (filters.demoCompleted === 'all' || (filters.demoCompleted === 'true' && user.demo_call) || (filters.demoCompleted === 'false' && !user.demo_call)) &&
-                (filters.onboardingCompleted === 'all' || (filters.onboardingCompleted === 'true' && user.onboarding_call) || (filters.onboardingCompleted === 'false' && !user.onboarding_call)) &&
+                (filters.demoScheduled === 'all' || (filters.demoScheduled === 'true' && user.demo_call?.scheduled_call) ||  (filters.demoScheduled === 'false' && (!user.demo_call.scheduled_call || !user.demo_call.scheduled_call))) &&
+                (filters.onboardingScheduled === 'all' || (filters.onboardingScheduled === 'true' && user.onboarding_call?.scheduled_call) || (filters.onboardingScheduled === 'false' && (!user.onboarding_call || !user.onboarding_call.scheduled_call))) &&
                 planMatch &&
                 statusMatch;
         });
@@ -260,7 +260,7 @@ export function Filters({ onFilterChange, users, filterState, setIsFilterPanelOp
                         <div className="border-t border-gray-200 px-4 py-6">
                             <h3 className="-mx-2 -my-3 flow-root">
                                 <button type="button" className="flex w-full items-center justify-between bg-white px-2 py-3 text-sm text-gray-400" aria-controls="filter-section-6" aria-expanded="false">
-                                    <span className="font-medium text-gray-900">Demo Completed</span>
+                                    <span className="font-medium text-gray-900">Demo Scheduled</span>
                                     <span className="ml-6 flex items-center">
                                         <svg className="rotate-0 h-5 w-5 transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
@@ -271,15 +271,15 @@ export function Filters({ onFilterChange, users, filterState, setIsFilterPanelOp
                             <div className="pt-6" id="filter-section-6">
                                 <div className="space-y-6">
                                     <div className="flex items-center">
-                                        <input id="filterDemoCompletedAll" name="filterDemoCompleted" value="all" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.demoCompleted === 'all'} onChange={handleFilterChange} />
+                                        <input id="filterDemoCompletedAll" name="filterDemoCompleted" value="all" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.demoScheduled === 'all'} onChange={handleFilterChange} />
                                         <label htmlFor="filterDemoCompletedAll" className="ml-3 text-sm text-gray-500">All</label>
                                     </div>
                                     <div className="flex items-center">
-                                        <input id="filterDemoCompletedTrue" name="filterDemoCompleted" value="true" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.demoCompleted === 'true'} onChange={handleFilterChange} />
+                                        <input id="filterDemoCompletedTrue" name="filterDemoCompleted" value="true" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.demoScheduled === 'true'} onChange={handleFilterChange} />
                                         <label htmlFor="filterDemoCompletedTrue" className="ml-3 text-sm text-gray-500">True</label>
                                     </div>
                                     <div className="flex items-center">
-                                        <input id="filterDemoCompletedFalse" name="filterDemoCompleted" value="false" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.demoCompleted === 'false'} onChange={handleFilterChange} />
+                                        <input id="filterDemoCompletedFalse" name="filterDemoCompleted" value="false" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.demoScheduled === 'false'} onChange={handleFilterChange} />
                                         <label htmlFor="filterDemoCompletedFalse" className="ml-3 text-sm text-gray-500">False</label>
                                     </div>
                                 </div>
@@ -289,7 +289,7 @@ export function Filters({ onFilterChange, users, filterState, setIsFilterPanelOp
                         <div className="border-t border-gray-200 px-4 py-6">
                             <h3 className="-mx-2 -my-3 flow-root">
                                 <button type="button" className="flex w-full items-center justify-between bg-white px-2 py-3 text-sm text-gray-400" aria-controls="filter-section-7" aria-expanded="false">
-                                    <span className="font-medium text-gray-900">Onboarding Completed</span>
+                                    <span className="font-medium text-gray-900">Onboarding Scheduled</span>
                                     <span className="ml-6 flex items-center">
                                         <svg className="rotate-0 h-5 w-5 transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
@@ -300,15 +300,15 @@ export function Filters({ onFilterChange, users, filterState, setIsFilterPanelOp
                             <div className="pt-6" id="filter-section-7">
                                 <div className="space-y-6">
                                     <div className="flex items-center">
-                                        <input id="filterOnboardingCompletedAll" name="filterOnboardingCompleted" value="all" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.onboardingCompleted === 'all'} onChange={handleFilterChange} />
+                                        <input id="filterOnboardingCompletedAll" name="filterOnboardingCompleted" value="all" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.onboardingScheduled === 'all'} onChange={handleFilterChange} />
                                         <label htmlFor="filterOnboardingCompletedAll" className="ml-3 text-sm text-gray-500">All</label>
                                     </div>
                                     <div className="flex items-center">
-                                        <input id="filterOnboardingCompletedTrue" name="filterOnboardingCompleted" value="true" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.onboardingCompleted === 'true'} onChange={handleFilterChange} />
+                                        <input id="filterOnboardingCompletedTrue" name="filterOnboardingCompleted" value="true" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.onboardingScheduled === 'true'} onChange={handleFilterChange} />
                                         <label htmlFor="filterOnboardingCompletedTrue" className="ml-3 text-sm text-gray-500">True</label>
                                     </div>
                                     <div className="flex items-center">
-                                        <input id="filterOnboardingCompletedFalse" name="filterOnboardingCompleted" value="false" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.onboardingCompleted === 'false'} onChange={handleFilterChange} />
+                                        <input id="filterOnboardingCompletedFalse" name="filterOnboardingCompleted" value="false" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.onboardingScheduled === 'false'} onChange={handleFilterChange} />
                                         <label htmlFor="filterOnboardingCompletedFalse" className="ml-3 text-sm text-gray-500">False</label>
                                     </div>
                                 </div>

@@ -83,8 +83,8 @@ export default function Home() {
     firstTransaction: 'all',
     mailgun: 'all',
     paymentProcessor: 'all',
-    demoCompleted: 'all',
-    onboardingCompleted: 'all',
+    demoScheduled: 'all',
+    onboardingScheduled: 'all',
     plan: 'all',
     status: ['active', 'trialing', 'past_due', 'canceled']
   });
@@ -304,8 +304,13 @@ export default function Home() {
       console.error('Expected filteredUsers to be an array, but got:', filteredUsers);
       return null;
     }
+  
     return filteredUsers.map(user => {
       const { price, style } = getProductPriceAndStyle(user.product_id);
+      const formattedDate = formatDate(user.timestamp);
+  
+      console.log('User:', user.location_name, 'Timestamp:', user.timestamp, 'Formatted Date:', formattedDate);
+  
       return (
         <TableRow key={user.location_id}>
           <TableCell>
@@ -323,7 +328,7 @@ export default function Home() {
               <div className={`flex-none rounded-full p-1 ${getStatusBgColor(user.account_status)}`}>
                 <div className="h-1.5 w-1.5 rounded-full bg-current"></div>
               </div>
-              <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
+              <time className="text-gray-400 sm:hidden" dateTime={user.timestamp}>{formattedDate}</time>
               <div className="hidden sm:block ml-2">{formatAccountStatus(user.account_status)}</div>
               <div className={`ml-2 px-2 py-1 rounded-md border ${style}`}>{price}</div>
             </div>
@@ -411,57 +416,57 @@ setStats({
 });
 };
     
-      const aggregateDataByDay = (data, field) => {
-        if (!Array.isArray(data)) {
-          console.error('Expected data to be an array, but got:', data);
-          return [];
-        }
-        const aggregatedData = {};
-        const totalUsersByDay = {};
-        const runningTotal = { count: 0, total: 0 };
-        data.forEach(item => {
-          const date = new Date(item.relative_created_time).toISOString().split('T')[0];
-          if (!aggregatedData[date]) {
-            aggregatedData[date] = 0;
-            totalUsersByDay[date] = 0;
-          }
-          totalUsersByDay[date] += 1;
-          if (item[field]) {
-            aggregatedData[date] += 1;
-          }
-        });
-        const result = Object.keys(aggregatedData)
-          .sort((a, b) => new Date(a) - new Date(b))
-          .map(date => {
-            runningTotal.count += totalUsersByDay[date];
-            runningTotal.total += aggregatedData[date];
-            return {
-              date,
-              value: (runningTotal.total / runningTotal.count) * 100, // Calculate running average percentage
-            };
-          });
-        return result;
+const aggregateDataByDay = (data, field) => {
+  if (!Array.isArray(data)) {
+    console.error('Expected data to be an array, but got:', data);
+    return [];
+  }
+  const aggregatedData = {};
+  const totalUsersByDay = {};
+  const runningTotal = { count: 0, total: 0 };
+  data.forEach(item => {
+    const date = new Date(item.timestamp * 1000).toISOString().split('T')[0];
+    if (!aggregatedData[date]) {
+      aggregatedData[date] = 0;
+      totalUsersByDay[date] = 0;
+    }
+    totalUsersByDay[date] += 1;
+    if (item[field]) {
+      aggregatedData[date] += 1;
+    }
+  });
+  const result = Object.keys(aggregatedData)
+    .sort((a, b) => new Date(a) - new Date(b))
+    .map(date => {
+      runningTotal.count += totalUsersByDay[date];
+      runningTotal.total += aggregatedData[date];
+      return {
+        date,
+        value: (runningTotal.total / runningTotal.count) * 100, // Calculate running average percentage
       };
+    });
+  return result;
+};
     
-      const aggregateRevenueByDay = (users) => {
-        const aggregatedData = {};
-        users.forEach(user => {
-          const date = new Date(user.relative_created_time).toISOString().split('T')[0];
-          const { product_id } = user;
-          const { price } = getProductPriceAndStyle(product_id);
-          if (!aggregatedData[date]) {
-            aggregatedData[date] = 0;
-          }
-          aggregatedData[date] += parseFloat(price.replace('$', '').replace(',', ''));
-        });
-        const result = Object.keys(aggregatedData)
-          .map(date => ({
-            date,
-            value: aggregatedData[date],
-          }))
-          .sort((a, b) => new Date(a.date) - new Date(b.date));
-        return result;
-      };
+const aggregateRevenueByDay = (users) => {
+  const aggregatedData = {};
+  users.forEach(user => {
+    const date = new Date(user.timestamp * 1000).toISOString().split('T')[0];
+    const { product_id } = user;
+    const { price } = getProductPriceAndStyle(product_id);
+    if (!aggregatedData[date]) {
+      aggregatedData[date] = 0;
+    }
+    aggregatedData[date] += parseFloat(price.replace('$', '').replace(',', ''));
+  });
+  const result = Object.keys(aggregatedData)
+    .map(date => ({
+      date,
+      value: aggregatedData[date],
+    }))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  return result;
+};
     
       const StatCard = ({ title, value, subtitle, trendData, showGraph, isPercentage }) => {
         const statusClasses = {
@@ -500,7 +505,7 @@ setStats({
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
-              tickFormatter={(tick) => formatDate(tick)}
+              tickFormatter={(tick) => formatDate(new Date(tick))}
               ticks={[data[0]?.date, data[data.length - 1]?.date]}
             />
             <YAxis
@@ -509,15 +514,15 @@ setStats({
             />
             <Tooltip
               formatter={(value) => isPercentage ? `${Math.round(value)}%` : formatCurrency(value)}
-              labelFormatter={(label) => formatDate(label)}
+              labelFormatter={(label) => formatDate(new Date(label))}
             />
             <Line type="monotone" dataKey="value" stroke="#0072c6" dot={false} />
           </LineChart>
         </ResponsiveContainer>
       );
     
-      const formatDate = (dateString) => {
-        const date = new Date(dateString);
+      const formatDate = (timestamp) => {
+        const date = new Date(timestamp * 1000); // Convert UNIX timestamp to milliseconds
         return date.toLocaleString('default', { month: 'short', day: 'numeric' });
       };
     
@@ -544,48 +549,50 @@ setStats({
         const today = new Date();
         let start, end;
         switch (range) {
-          case 'today':
-            start = end = today;
-            break;
-          case 'last7days':
+          case '1W':
             start = new Date(today);
             start.setDate(today.getDate() - 7);
             end = new Date();
             break;
-          case 'last4weeks':
+          case '4W':
             start = new Date(today);
             start.setDate(today.getDate() - 28);
             end = new Date();
             break;
-          case 'last3months':
+          case '3M':
             start = new Date(today);
             start.setMonth(today.getMonth() - 3);
             end = new Date();
             break;
-          case 'last12months':
+          case '1Y':
             start = new Date(today);
             start.setFullYear(today.getFullYear() - 1);
             end = new Date();
             break;
-          case 'monthtodate':
+          case 'MTD':
             start = new Date(today.getFullYear(), today.getMonth(), 1);
             end = new Date();
             break;
-          case 'quartertodate':
+          case 'QTD':
             start = new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
             end = new Date();
             break;
-          case 'yeartodate':
+          case 'YTD':
             start = new Date(today.getFullYear(), 0, 1);
             end = new Date();
             break;
-          case 'alltime':
+          case 'ALL':
             start = new Date(2000, 0, 1); // Arbitrary old date
             end = new Date();
             break;
           default:
             start = end = new Date();
         }
+      
+        console.log('Selected Range:', range);
+        console.log('Start Date:', start);
+        console.log('End Date:', end);
+      
         setStartDate(start);
         setEndDate(end);
         fetchData(start, end);
@@ -614,18 +621,25 @@ setStats({
             (filters.plan === 'prod_PpFXqy79vlGOIE' && ['prod_PpFXqy79vlGOIE', 'prod_PdPwwouLLJod3b', 'prod_M6IyZeJydN4vMn'].includes(user.product_id)) ||
             (filters.plan === 'prod_OvDkzhKINbc38T' && ['prod_OvDkzhKINbc38T', 'prod_M6IyfUy0ONYSIw'].includes(user.product_id)) ||
             filters.plan === user.product_id;
+      
           return (filters.calendar === 'all' || (filters.calendar === 'true' && user.total_calendars > 0) || (filters.calendar === 'false' && user.total_calendars === 0)) &&
             (filters.product === 'all' || (filters.product === 'true' && user.total_products > 0) || (filters.product === 'false' && user.total_products === 0)) &&
             (filters.firstTransaction === 'all' || (filters.firstTransaction === 'true' && user.has_had_first_transaction) || (filters.firstTransaction === 'false' && !user.has_had_first_transaction)) &&
             (filters.mailgun === 'all' || (filters.mailgun === 'true' && user.mailgun_connected) || (filters.mailgun === 'false' && !user.mailgun_connected)) &&
             (filters.paymentProcessor === 'all' || (filters.paymentProcessor === 'True' && user.payment_processor_integration) || (filters.paymentProcessor === 'False' && !user.payment_processor_integration)) &&
-            (filters.demoCompleted === 'all' || (filters.demoCompleted === 'true' && user.demo_call) || (filters.demoCompleted === 'false' && !user.demo_call)) &&
-            (filters.onboardingCompleted === 'all' || (filters.onboardingCompleted === 'true' && user.onboarding_call) || (filters.onboardingCompleted === 'false' && !user.onboarding_call)) &&
+            (filters.demoScheduled === 'all' || 
+              (filters.demoScheduled === 'true' && user.demo_call?.scheduled_call) || 
+              (filters.demoScheduled === 'false' && (!user.demo_call || !user.demo_call.scheduled_call))) &&
+            (filters.onboardingScheduled === 'all' || 
+              (filters.onboardingScheduled === 'true' && user.onboarding_call?.scheduled_call) || 
+              (filters.onboardingScheduled === 'false' && (!user.onboarding_call || !user.onboarding_call.scheduled_call))) &&
             planMatch &&
             statusMatch;
         });
+      
         setFilteredUsers(filteredUsers);
         updateCards(filteredUsers);
+      
         // Recalculate Total Revenue, Daily MRR, and MRR Trajectory
         const totalRevenue = calculateTotalRevenue(filteredUsers);
         const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, startDate, endDate);
@@ -704,7 +718,12 @@ setStats({
       <div className="fixed inset-0 bg-opacity-50 z-50 flex justify-end">
         <div className="bg-white w-64 p-4 shadow-lg">
           <button onClick={() => setIsFilterPanelOpen(false)} className="mb-4">Close</button>
-          <Filters onFilterChange={handleFilterChange} users={users} filterState={filterState} setIsFilterPanelOpen={setIsFilterPanelOpen} />
+          <Filters
+  onFilterChange={handleFilterChange}
+  users={users}
+  filterState={filterState}
+  setIsFilterPanelOpen={setIsFilterPanelOpen}
+/>
         </div>
       </div>
     )}
