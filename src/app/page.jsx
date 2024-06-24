@@ -299,53 +299,53 @@ export default function Home() {
     }
   };
 
-const renderTable = () => {
-  if (!Array.isArray(filteredUsers)) {
-    console.error('Expected filteredUsers to be an array, but got:', filteredUsers);
-    return null;
-  }
-  return filteredUsers.map(user => {
-    const { price, style } = getProductPriceAndStyle(user.product_id);
-    return (
-      <TableRow key={user.location_id}>
-        <TableCell>
-          <div className="flex items-center">
-            <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900 location-name">
-              {user.location_name.replace("'s Account", '').replace('Account', '').trim().length > 15 ? `${user.location_name.replace("'s Account", '').replace('Account', '').trim().substring(0, 15)}...` : user.location_name.replace("'s Account", '').replace('Account', '').trim()}
-            </a>
-            <a href={user.contact_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-gray-500 hover:text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            </a>
-          </div>
-          <div className="text-xs text-gray-500 flex items-center">
-            <div className={`flex-none rounded-full p-1 ${getStatusBgColor(user.account_status)}`}>
-              <div className="h-1.5 w-1.5 rounded-full bg-current"></div>
+  const renderTable = () => {
+    if (!Array.isArray(filteredUsers)) {
+      console.error('Expected filteredUsers to be an array, but got:', filteredUsers);
+      return null;
+    }
+    return filteredUsers.map(user => {
+      const { price, style } = getProductPriceAndStyle(user.product_id);
+      return (
+        <TableRow key={user.location_id}>
+          <TableCell>
+            <div className="flex items-center">
+              <a href={`https://app.coursecreator360.com/v2/location/${user.location_id}/dashboard`} className="text-indigo-600 hover:text-indigo-900 location-name">
+                {user.location_name.replace("'s Account", '').replace('Account', '').trim().length > 15 ? `${user.location_name.replace("'s Account", '').replace('Account', '').trim().substring(0, 15)}...` : user.location_name.replace("'s Account", '').replace('Account', '').trim()}
+              </a>
+              <a href={user.contact_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+              </a>
             </div>
-            <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
-            <div className="hidden sm:block ml-2">{formatAccountStatus(user.account_status)}</div>
-            <div className={`ml-2 px-2 py-1 rounded-md border ${style}`}>{price}</div>
-          </div>
-        </TableCell>
-        <TableCell>{formatHasDemoCallScheduled(user.demo_call)}</TableCell>
-        <TableCell>
-          {user.demo_call && user.demo_call.scheduled_call && user.demo_call.completed_call === 'unknown' ? (
-            <button onClick={() => openReportModal('Demo', user)} className="text-yellow-700 bg-yellow-100 border border-yellow-700 rounded px-2 py-1">Report</button>
-          ) : formatDemoCompleted(user)}
-        </TableCell>
-        <TableCell>{formatHasOnboardingCallScheduled(user.onboarding_call)}</TableCell>
-        <TableCell>
-          {user.onboarding_call && user.onboarding_call.scheduled_call && user.onboarding_call.completed_call === 'unknown' ? (
-            <button onClick={() => openReportModal('Onboarding', user)} className="text-yellow-700 bg-yellow-100 border border-yellow-700 rounded px-2 py-1">Report</button>
-          ) : formatOnboardingCompleted(user)}
-        </TableCell>
-        <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
-        <TableCell><span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
-      </TableRow>
-    );
-  });
-};
+            <div className="text-xs text-gray-500 flex items-center">
+              <div className={`flex-none rounded-full p-1 ${getStatusBgColor(user.account_status)}`}>
+                <div className="h-1.5 w-1.5 rounded-full bg-current"></div>
+              </div>
+              <time className="text-gray-400 sm:hidden" dateTime={user.relative_created_time}>{formatDate(user.relative_created_time)}</time>
+              <div className="hidden sm:block ml-2">{formatAccountStatus(user.account_status)}</div>
+              <div className={`ml-2 px-2 py-1 rounded-md border ${style}`}>{price}</div>
+            </div>
+          </TableCell>
+          <TableCell>{formatHasDemoCallScheduled(user.demo_call)}</TableCell>
+          <TableCell>
+            {user.demo_call && user.demo_call.scheduled_call && user.demo_call.completed_call === 'unknown' ? (
+              <button onClick={() => openReportModal('Demo', user)} className="text-yellow-700 bg-yellow-100 border border-yellow-700 rounded px-2 py-1">Report</button>
+            ) : formatDemoCompleted(user)}
+          </TableCell>
+          <TableCell>{formatHasOnboardingCallScheduled(user.onboarding_call)}</TableCell>
+          <TableCell>
+            {user.onboarding_call && user.onboarding_call.scheduled_call && user.onboarding_call.completed_call === 'unknown' ? (
+              <button onClick={() => openReportModal('Onboarding', user)} className="text-yellow-700 bg-yellow-100 border border-yellow-700 rounded px-2 py-1">Report</button>
+            ) : formatOnboardingCompleted(user)}
+          </TableCell>
+          <TableCell><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatMailgunConnected(user.mailgun_connected)}</span></TableCell>
+          <TableCell><span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}>{formatPaymentProcessor(user.payment_processor_integration)}</span></TableCell>
+        </TableRow>
+      );
+    });
+  };
 
   const getStatusBgColor = (status) => {
     if (!status) return 'bg-gray-400/10 text-gray-400';
@@ -674,96 +674,94 @@ setStats({
               </dl>
             </div>
           </div>
-          <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 bg-white-100">
-            <div className="mx-auto max-w-7xl bg-white-100">
-              <Table className="table-auto w-full bg-white-100">
-              <CallReportingModal
-     isOpen={isModalOpen}
-     onClose={closeReportModal}
-     callType={modalCallType}
-     user={modalUser}
-   />
-        
-                <TableHead>
-                  <TableRow>
-                    <TableHeader>Location Name</TableHeader>
-                    <TableHeader className="cursor-pointer" onClick={() => handleSort('demo_call')}>Demo Scheduled</TableHeader>
-                    <TableHeader>Demo Completed</TableHeader>
-                    <TableHeader className="cursor-pointer" onClick={() => handleSort('onboarding_call')}>Onboarding Scheduled</TableHeader>
-                    <TableHeader>Onboarding Completed</TableHeader>
-                    <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun</TableHeader>
-                    <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Pay Int</TableHeader>
-                    </TableRow>
-            </TableHead>
-            <TableBody>
-              {renderTable()}
-            </TableBody>
-          </Table>
+    <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 bg-white-100">
+      <div className="mx-auto max-w-7xl bg-white-100">
+        <Table className="table-auto w-full bg-white-100">
+          <CallReportingModal
+            isOpen={isModalOpen}
+            onClose={closeReportModal}
+            callType={modalCallType}
+            user={modalUser}
+          />
+          <TableHead>
+            <TableRow>
+              <TableHeader>Location Name</TableHeader>
+              <TableHeader className="cursor-pointer" onClick={() => handleSort('demo_call')}>Demo<br />Scheduled</TableHeader>
+              <TableHeader>Demo<br />Completed</TableHeader>
+              <TableHeader className="cursor-pointer" onClick={() => handleSort('onboarding_call')}>Onboarding<br />Scheduled</TableHeader>
+              <TableHeader>Onboarding<br />Completed</TableHeader>
+              <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun</TableHeader>
+              <TableHeader className="cursor-pointer" onClick={() => handleSort('payment_processor_integration')}>Pay<br />Int</TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {renderTable()}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+    {isFilterPanelOpen && (
+      <div className="fixed inset-0 bg-opacity-50 z-50 flex justify-end">
+        <div className="bg-white w-64 p-4 shadow-lg">
+          <button onClick={() => setIsFilterPanelOpen(false)} className="mb-4">Close</button>
+          <Filters onFilterChange={handleFilterChange} users={users} filterState={filterState} setIsFilterPanelOpen={setIsFilterPanelOpen} />
         </div>
       </div>
-      {isFilterPanelOpen && (
-        <div className="fixed inset-0 bg-opacity-50 z-50 flex justify-end">
-          <div className="bg-white w-64 p-4 shadow-lg">
-            <button onClick={() => setIsFilterPanelOpen(false)} className="mb-4">Close</button>
-            <Filters onFilterChange={handleFilterChange} users={users} filterState={filterState} setIsFilterPanelOpen={setIsFilterPanelOpen} />
-          </div>
-        </div>
-      )}
-      <style jsx>{`
-        th, td {
-          padding: 0.5rem 0.75rem; /* Adjust padding to make columns less spaced apart */
+    )}
+    <style jsx>{`
+      th, td {
+        padding: 0.5rem 0.75rem; /* Adjust padding to make columns less spaced apart */
+      }
+      th {
+        font-size: 0.5rem; /* Smaller text for table headers */
+        white-space: normal; /* Allow text to wrap onto two lines */
+      }
+      .location-name {
+        font-size: 0.875rem; /* Smaller text for location name */
+      }
+      .status-dot {
+        display: inline-block;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+      }
+      .text-green-600 {
+        color: #16a34a;
+      }
+      .text-yellow-700 {
+        font-size: 0.875rem; /* Ensure the same size as "Yes" and "No" */
+      }
+      .bg-yellow-100 {
+        background-color: #fef3c7;
+      }
+      .border-yellow-700 {
+        border-color: #d97706;
+      }
+      @media (max-width: 640px) {
+        .flex-col {
+          flex-direction: column;
         }
-        th {
-          font-size: 0.75rem; /* Smaller text for table headers */
-          white-space: normal; /* Allow text to wrap onto two lines */
+        .table-auto {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
         }
-        .location-name {
-          font-size: 0.875rem; /* Smaller text for location name */
-        }
-        .status-dot {
+        .table-auto th, .table-auto td {
           display: inline-block;
-          width: 0.5rem;
-          height: 0.5rem;
-          border-radius: 50%;
-          margin-right: 0.5rem;
+          width: auto;
         }
-        .text-green-600 {
-          color: #16a34a;
+        th, td {
+          font-size: 0.75rem; /* Smaller text for table data */
         }
-        .text-yellow-700 {
-          font-size: 0.875rem; /* Ensure the same size as "Yes" and "No" */
+        .hidden {
+          display: none;
         }
-        .bg-yellow-100 {
-          background-color: #fef3c7;
-        }
-        .border-yellow-700 {
-          border-color: #d97706;
-        }
-        @media (max-width: 640px) {
-          .flex-col {
-            flex-direction: column;
-          }
-          .table-auto {
-            display: block;
-            overflow-x: auto;
-            white-space: nowrap;
-          }
-          .table-auto th, .table-auto td {
-            display: inline-block;
-            width: auto;
-          }
-          th, td {
-            font-size: 0.75rem; /* Smaller text for table data */
-          }
-          .hidden {
-            display: none;
-          }
-        }
-        button {
-          position: relative;
-          z-index: 10; /* Ensure the button is on top */
-        }
-      `}</style>
-    </>
-  );
-};
+      }
+      button {
+        position: relative;
+        z-index: 10; /* Ensure the button is on top */
+      }
+    `}</style>
+  </>
+);};
