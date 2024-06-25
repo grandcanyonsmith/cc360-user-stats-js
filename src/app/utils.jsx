@@ -83,6 +83,22 @@ export function formatHasOnboardingCallScheduled(onboardingCall) {
     }
 }
 
+export const formatDate = (date) => {
+if (!(date instanceof Date)) {
+    date = new Date(date); // Ensure date is a JavaScript Date object
+}
+return date.toLocaleDateString('default', { month: 'short', day: 'numeric' }); // Use toLocaleDateString for consistent formatting
+};
+
+// // Ensure formatCurrency function is defined
+export const formatCurrency = (value) => {
+  if (value >= 1000) {
+    return `$${(value / 1000).toFixed(1)}K`;
+  }
+  return `$${value.toLocaleString()}`;
+};
+
+
 // export const formatDemoCompleted = (user) => {
 //     const demoCall = user.demo_call;
 //     if (!demoCall || demoCall.scheduled_call === false) {
