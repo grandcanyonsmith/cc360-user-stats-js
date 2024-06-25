@@ -659,6 +659,8 @@ const aggregateRevenueByDay = (users) => {
         setMrrTrajectory(mrrTrajectory);
       };
     
+
+
       return (
         <>
           <div className="py-12 sm:py-16 bg-white">
@@ -668,18 +670,33 @@ const aggregateRevenueByDay = (users) => {
                 <p className="mt-4 text-lg leading-8 text-gray-600">Overview of user data based on the selected date range.</p>
                 <hr className="mt-4 mb-8 border-t border-gray-300" />
               </div>
-              <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-  <Button className="mb-4 sm:mb-0" onClick={() => setIsFilterPanelOpen(true)}>Filters</Button>
-  <div className="w-full">
-    <SalesDatePicker
-      startDate={startDate}
-      setStartDate={setStartDate}
-      endDate={endDate}
-      setEndDate={setEndDate}
-      fetchSalesData={fetchData}
-    />
-  </div>
-</div>
+              <div className="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="flex flex-col sm:flex-row sm:flex-grow sm:space-x-4">
+                  <div className="hidden sm:block">
+                    <SalesDatePicker
+                      startDate={startDate}
+                      setStartDate={setStartDate}
+                      endDate={endDate}
+                      setEndDate={setEndDate}
+                      fetchSalesData={fetchData}
+                    />
+                  </div>
+
+                </div>
+                <Button className="hidden sm:block sm:ml-auto" onClick={() => setIsFilterPanelOpen(true)}>Filters</Button>
+                <div className="block sm:hidden w-full">
+                  <Button className="mt-4 w-full" onClick={() => setIsFilterPanelOpen(true)}>Filters</Button>
+                  <SalesDatePicker
+                    startDate={startDate}
+                    setStartDate={setStartDate}
+                    endDate={endDate}
+                    setEndDate={setEndDate}
+                    fetchSalesData={fetchData}
+                  />
+                </div>
+              </div>
+          
+          
               <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
                 <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} isPercentage={true} />
                 <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} isPercentage={true} />
