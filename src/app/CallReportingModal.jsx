@@ -3,30 +3,34 @@ import { CheckIcon, XMarkIcon } from '@heroicons/react/20/solid';
 import axios from 'axios';
 
 const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
-  console.log(callType, 'call type here');
-  console.log(user, 'user here');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedWho, setSelectedWho] = useState('');
   const [zoomUrl, setZoomUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [whoDropdownOpen, setWhoDropdownOpen] = useState(false);
+
   const formatAppointmentTime = (appointmentTime) => {
     if (!appointmentTime) return 'N/A';
     const date = new Date(appointmentTime);
-    const options = { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+    const options = { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
     return date.toLocaleDateString('en-US', options);
   };
+
+  const formatJoinTime = (timestamp) => {
+    if (!timestamp) return 'N/A';
+    const date = new Date(timestamp * 1000); // Convert Unix timestamp to milliseconds
+    const options = { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+
   const handleSubmit = async () => {
     if (!selectedStatus || !selectedWho) {
       alert('Please fill out all required fields.');
       return;
     }
-
     setIsSubmitting(true);
-
     const callTypeKey = callType === 'Demo' ? 'demo_call' : callType === 'Onboarding' ? 'onboarding_call' : callType;
-
     const formData = {
       location_id: user.location_id,
       call_type: callTypeKey,
@@ -34,9 +38,7 @@ const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
       employee_name: selectedWho,
       zoomUrl: zoomUrl,
     };
-
     console.log(formData, 'form data here');
-
     try {
       const response = await axios.post('https://d7rlgxm43l4znqhydjb7wbxf5y0lruda.lambda-url.us-west-2.on.aws/', formData, {
         headers: {
@@ -67,11 +69,10 @@ const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
     }
   };
 
-
   if (!isOpen) return null;
 
-  const appointmentTime = callType === 'Onboarding' 
-    ? user?.onboarding_call?.appointment_time 
+  const appointmentTime = callType === 'Onboarding'
+    ? user?.onboarding_call?.appointment_time
     : user?.demo_call?.appointment_time;
 
   return (
@@ -89,6 +90,7 @@ const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
                   <h3 className="text-base font-semibold leading-6 text-gray-900" id="modal-title">Report {callType} Call</h3>
                   <div className="mt-2">
                     <p className="text-sm text-gray-500">Reporting for user: {user?.location_name}</p>
+                    <p className="text-sm text-gray-500">Joined: {formatJoinTime(user?.timestamp)}</p>
                     <p className="text-sm text-gray-500">Call Time: {formatAppointmentTime(appointmentTime)}</p>
                   </div>
                 </div>
