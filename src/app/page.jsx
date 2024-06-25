@@ -456,7 +456,7 @@ const aggregateDataByDay = (data, field) => {
 const aggregateRevenueByDay = (users) => {
   const aggregatedData = {};
   users.forEach(user => {
-    const date = new Date(user.timestamp * 1000).toISOString().split('T')[0];
+    const date = new Date(user.timestamp * 1000).toISOString().split('T')[0]; // Ensure correct date conversion
     const { product_id } = user;
     const { price } = getProductPriceAndStyle(product_id);
     if (!aggregatedData[date]) {
@@ -466,12 +466,14 @@ const aggregateRevenueByDay = (users) => {
   });
   const result = Object.keys(aggregatedData)
     .map(date => ({
-      date,
+      date: new Date(date), // Ensure date is a JavaScript Date object
       value: aggregatedData[date],
     }))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
+  console.log('Aggregated Revenue Data:', result); // Debug the data
   return result;
 };
+
     
       const StatCard = ({ title, value, subtitle, trendData, showGraph, isPercentage }) => {
         const statusClasses = {
@@ -510,7 +512,7 @@ const aggregateRevenueByDay = (users) => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
-              tickFormatter={(tick) => formatDate(new Date(tick))}
+              tickFormatter={(tick) => formatDate(tick)}
               ticks={[data[0]?.date, data[data.length - 1]?.date]}
             />
             <YAxis
@@ -519,18 +521,20 @@ const aggregateRevenueByDay = (users) => {
             />
             <Tooltip
               formatter={(value) => isPercentage ? `${Math.round(value)}%` : formatCurrency(value)}
-              labelFormatter={(label) => formatDate(new Date(label))}
+              labelFormatter={(label) => formatDate(label)}
             />
             <Line type="monotone" dataKey="value" stroke="#0072c6" dot={false} />
           </LineChart>
         </ResponsiveContainer>
       );
     
-      const formatDate = (timestamp) => {
-        const date = new Date(timestamp * 1000); // Convert UNIX timestamp to milliseconds
-        return date.toLocaleString('default', { month: 'short', day: 'numeric' });
+      const formatDate = (date) => {
+        if (!(date instanceof Date)) {
+          date = new Date(date); // Ensure date is a JavaScript Date object
+        }
+        return date.toLocaleDateString('default', { month: 'short', day: 'numeric' }); // Use toLocaleDateString for consistent formatting
       };
-    
+
       const formatCurrency = (value) => {
         if (value >= 1000) {
           return `$${(value / 1000).toFixed(1)}K`;
@@ -808,5 +812,3 @@ const aggregateRevenueByDay = (users) => {
     `}</style>
   </>
 );};
-
-
