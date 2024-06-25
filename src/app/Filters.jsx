@@ -5,33 +5,40 @@ export function Filters({ onFilterChange, users, filterState, setIsFilterPanelOp
 
     const handleFilterChange = () => {
         const filters = {
-            calendar: document.querySelector('input[name="filterCalendar"]:checked').value,
-            product: document.querySelector('input[name="filterProduct"]:checked').value,
-            firstTransaction: document.querySelector('input[name="filterFirstTransaction"]:checked').value,
-            mailgun: document.querySelector('input[name="filterMailgun"]:checked').value,
-            paymentProcessor: document.querySelector('input[name="filterPaymentProcessor"]:checked').value,
-            demoScheduled: document.querySelector('input[name="filterDemoCompleted"]:checked').value,
-            onboardingScheduled: document.querySelector('input[name="filterOnboardingCompleted"]:checked').value,
-            plan: document.querySelector('input[name="filterPlan"]:checked').value,
-            status: Array.from(document.querySelectorAll('input[name="filterStatus"]:checked')).map(checkbox => checkbox.value)
+          calendar: document.querySelector('input[name="filterCalendar"]:checked').value,
+          product: document.querySelector('input[name="filterProduct"]:checked').value,
+          firstTransaction: document.querySelector('input[name="filterFirstTransaction"]:checked').value,
+          mailgun: document.querySelector('input[name="filterMailgun"]:checked').value,
+          paymentProcessor: document.querySelector('input[name="filterPaymentProcessor"]:checked').value,
+          demoScheduled: document.querySelector('input[name="filterDemoCompleted"]:checked').value,
+          onboardingScheduled: document.querySelector('input[name="filterOnboardingCompleted"]:checked').value,
+          demoCompleted: document.querySelector('input[name="filterDemoCompletedStatus"]:checked').value, // New filter
+          onboardingCompleted: document.querySelector('input[name="filterOnboardingCompletedStatus"]:checked').value, // New filter
+          plan: document.querySelector('input[name="filterPlan"]:checked').value,
+          status: Array.from(document.querySelectorAll('input[name="filterStatus"]:checked')).map(checkbox => checkbox.value)
         };
-
+      
         const filteredUsers = users.filter(user => {
-            const statusMatch = filters.status.includes(user.account_status);
-            const planMatch = filters.plan === 'all' || filters.plan === user.product_id;
-            return (filters.calendar === 'all' || (filters.calendar === 'true' && user.total_calendars > 0) || (filters.calendar === 'false' && user.total_calendars === 0)) &&
-                (filters.product === 'all' || (filters.product === 'true' && user.total_products > 0) || (filters.product === 'false' && user.total_products === 0)) &&
-                (filters.firstTransaction === 'all' || (filters.firstTransaction === 'true' && user.has_had_first_transaction) || (filters.firstTransaction === 'false' && !user.has_had_first_transaction)) &&
-                (filters.mailgun === 'all' || (filters.mailgun === 'true' && user.mailgun_connected) || (filters.mailgun === 'false' && !user.mailgun_connected)) &&
-                (filters.paymentProcessor === 'all' || (filters.paymentProcessor === 'True' && user.payment_processor_integration) || (filters.paymentProcessor === 'False' && !user.payment_processor_integration)) &&
-                (filters.demoScheduled === 'all' || (filters.demoScheduled === 'true' && user.demo_call?.scheduled_call) ||  (filters.demoScheduled === 'false' && (!user.demo_call.scheduled_call || !user.demo_call.scheduled_call))) &&
-                (filters.onboardingScheduled === 'all' || (filters.onboardingScheduled === 'true' && user.onboarding_call?.scheduled_call) || (filters.onboardingScheduled === 'false' && (!user.onboarding_call || !user.onboarding_call.scheduled_call))) &&
-                planMatch &&
-                statusMatch;
+          const statusMatch = filters.status.includes(user.account_status);
+          const planMatch = filters.plan === 'all' || filters.plan === user.product_id;
+      
+          return (
+            (filters.calendar === 'all' || (filters.calendar === 'true' && user.total_calendars > 0) || (filters.calendar === 'false' && user.total_calendars === 0)) &&
+            (filters.product === 'all' || (filters.product === 'true' && user.total_products > 0) || (filters.product === 'false' && user.total_products === 0)) &&
+            (filters.firstTransaction === 'all' || (filters.firstTransaction === 'true' && user.has_had_first_transaction) || (filters.firstTransaction === 'false' && !user.has_had_first_transaction)) &&
+            (filters.mailgun === 'all' || (filters.mailgun === 'true' && user.mailgun_connected) || (filters.mailgun === 'false' && !user.mailgun_connected)) &&
+            (filters.paymentProcessor === 'all' || (filters.paymentProcessor === 'True' && user.payment_processor_integration) || (filters.paymentProcessor === 'False' && !user.payment_processor_integration)) &&
+            (filters.demoScheduled === 'all' || (filters.demoScheduled === 'true' && user.demo_call?.scheduled_call) || (filters.demoScheduled === 'false' && (!user.demo_call || !user.demo_call.scheduled_call))) &&
+            (filters.onboardingScheduled === 'all' || (filters.onboardingScheduled === 'true' && user.onboarding_call?.scheduled_call) || (filters.onboardingScheduled === 'false' && (!user.onboarding_call || !user.onboarding_call.scheduled_call))) &&
+            (filters.demoCompleted === 'all' || (filters.demoCompleted === 'true' && user.demo_call?.completed_call === true) || (filters.demoCompleted === 'false' && user.demo_call?.completed_call === false)) &&
+            (filters.onboardingCompleted === 'all' || (filters.onboardingCompleted === 'true' && user.onboarding_call?.completed_call === true) || (filters.onboardingCompleted === 'false' && user.onboarding_call?.completed_call === false)) &&
+            planMatch &&
+            statusMatch
+          );
         });
-
+      
         onFilterChange(filters);
-    };
+      };
 
     useEffect(() => {
         const closeFilterPanel = () => {
@@ -314,6 +321,66 @@ export function Filters({ onFilterChange, users, filterState, setIsFilterPanelOp
                                 </div>
                             </div>
                         </div>
+                                    {/* Existing filters */}
+            {/* Demo Completed Filter */}
+            <div className="border-t border-gray-200 px-4 py-6">
+              <h3 className="-mx-2 -my-3 flow-root">
+                <button type="button" className="flex w-full items-center justify-between bg-white px-2 py-3 text-sm text-gray-400" aria-controls="filter-section-9" aria-expanded="false">
+                  <span className="font-medium text-gray-900">Demo Call Completed</span>
+                  <span className="ml-6 flex items-center">
+                    <svg className="rotate-0 h-5 w-5 transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                </button>
+              </h3>
+              <div className="pt-6" id="filter-section-9">
+                <div className="space-y-6">
+                  <div className="flex items-center">
+                    <input id="filterDemoCompletedStatusAll" name="filterDemoCompletedStatus" value="all" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.demoCompleted === 'all'} onChange={handleFilterChange} />
+                    <label htmlFor="filterDemoCompletedStatusAll" className="ml-3 text-sm text-gray-500">All</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input id="filterDemoCompletedStatusTrue" name="filterDemoCompletedStatus" value="true" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.demoCompleted === 'true'} onChange={handleFilterChange} />
+                    <label htmlFor="filterDemoCompletedStatusTrue" className="ml-3 text-sm text-gray-500">True</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input id="filterDemoCompletedStatusFalse" name="filterDemoCompletedStatus" value="false" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.demoCompleted === 'false'} onChange={handleFilterChange} />
+                    <label htmlFor="filterDemoCompletedStatusFalse" className="ml-3 text-sm text-gray-500">False</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Onboarding Completed Filter */}
+            <div className="border-t border-gray-200 px-4 py-6">
+              <h3 className="-mx-2 -my-3 flow-root">
+                <button type="button" className="flex w-full items-center justify-between bg-white px-2 py-3 text-sm text-gray-400" aria-controls="filter-section-10" aria-expanded="false">
+                  <span className="font-medium text-gray-900">Onboarding Call Completed</span>
+                  <span className="ml-6 flex items-center">
+                    <svg className="rotate-0 h-5 w-5 transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                </button>
+              </h3>
+              <div className="pt-6" id="filter-section-10">
+                <div className="space-y-6">
+                  <div className="flex items-center">
+                    <input id="filterOnboardingCompletedStatusAll" name="filterOnboardingCompletedStatus" value="all" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.onboardingCompleted === 'all'} onChange={handleFilterChange} />
+                    <label htmlFor="filterOnboardingCompletedStatusAll" className="ml-3 text-sm text-gray-500">All</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input id="filterOnboardingCompletedStatusTrue" name="filterOnboardingCompletedStatus" value="true" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.onboardingCompleted === 'true'} onChange={handleFilterChange} />
+                    <label htmlFor="filterOnboardingCompletedStatusTrue" className="ml-3 text-sm text-gray-500">True</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input id="filterOnboardingCompletedStatusFalse" name="filterOnboardingCompletedStatus" value="false" type="radio" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked={filterState.onboardingCompleted === 'false'} onChange={handleFilterChange} />
+                    <label htmlFor="filterOnboardingCompletedStatusFalse" className="ml-3 text-sm text-gray-500">False</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Existing filters */}
                         {/* Plan Filter */}
                         <div className="border-t border-gray-200 px-4 py-6">
                             <h3 className="-mx-2 -my-3 flow-root">

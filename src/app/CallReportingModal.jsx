@@ -11,7 +11,12 @@ const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [whoDropdownOpen, setWhoDropdownOpen] = useState(false);
-
+  const formatAppointmentTime = (appointmentTime) => {
+    if (!appointmentTime) return 'N/A';
+    const date = new Date(appointmentTime);
+    const options = { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
   const handleSubmit = async () => {
     if (!selectedStatus || !selectedWho) {
       alert('Please fill out all required fields.');
@@ -62,7 +67,12 @@ const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
     }
   };
 
+
   if (!isOpen) return null;
+
+  const appointmentTime = callType === 'Onboarding' 
+    ? user?.onboarding_call?.appointment_time 
+    : user?.demo_call?.appointment_time;
 
   return (
     <div className="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -79,6 +89,7 @@ const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
                   <h3 className="text-base font-semibold leading-6 text-gray-900" id="modal-title">Report {callType} Call</h3>
                   <div className="mt-2">
                     <p className="text-sm text-gray-500">Reporting for user: {user?.location_name}</p>
+                    <p className="text-sm text-gray-500">Call Time: {formatAppointmentTime(appointmentTime)}</p>
                   </div>
                 </div>
               </div>

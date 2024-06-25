@@ -85,9 +85,12 @@ export default function Home() {
     paymentProcessor: 'all',
     demoScheduled: 'all',
     onboardingScheduled: 'all',
+    demoCompleted: 'all', // New filter
+    onboardingCompleted: 'all', // New filter
     plan: 'all',
     status: ['active', 'trialing', 'past_due', 'canceled']
   });
+
 
   useEffect(() => {
     console.log('Fetching data for date range:', startDate, endDate);
@@ -158,49 +161,51 @@ export default function Home() {
         'Content-Type': 'application/json'
       }
     })
-      .then(response => {
-        console.log('Received response:', response);
-        if (!Array.isArray(response.data)) {
-          console.error('Expected response data to be an array, but got:', response.data);
-          return;
+    .then(response => {
+      console.log('Received response:', response);
+      if (!Array.isArray(response.data)) {
+        console.error('Expected response data to be an array, but got:', response.data);
+        return;
+      }
+      const users = response.data.map(user => {
+        const hasIncome = parseFloat(user.income_all_time) > 0 || parseFloat(user.income_7_days) > 0 || parseFloat(user.income_30_days) > 0 || parseFloat(user.income_90_days) > 0;
+        if (!user.relative_created_time) {
+          console.warn('Missing relative_created_time for user:', user);
         }
-        const users = response.data.map(user => {
-          const hasIncome = parseFloat(user.income_all_time) > 0 || parseFloat(user.income_7_days) > 0 || parseFloat(user.income_30_days) > 0 || parseFloat(user.income_90_days) > 0;
-          if (!user.relative_created_time) {
-            console.warn('Missing relative_created_time for user:', user);
-          }
-          return {
-            ...user,
-            mailgun_connected: user.mailgun_connected === "true" || user.mailgun_connected === true,
-            has_had_first_transaction: hasIncome || user.has_had_first_transaction === "true" || user.has_had_first_transaction === true,
-            payment_processor_integration: user.payment_processor_integration === "True" || user.payment_processor_integration === true,
-            relative_created_time: user.relative_created_time ? parseRelativeTime(user.relative_created_time) : new Date(), // Handle undefined relative_created_time
-            demo_call: user.demo_call ? {
-              scheduled_call: user.demo_call.scheduled_call,
-              completed_call: user.demo_call.completed_call
-            } : { scheduled_call: false, completed_call: false },
-            onboarding_call: user.onboarding_call ? {
-              scheduled_call: user.onboarding_call.scheduled_call,
-              completed_call: user.onboarding_call.completed_call
-            } : { scheduled_call: false, completed_call: false }
-          };
-        });
-        console.log('Processed users:', users);
-        setUsers(users);
-        setFilteredUsers(users.filter(user => user.account_status !== 'Unknown'));
-        updateCards(users.filter(user => user.account_status !== 'Unknown'));
-        const totalRevenue = calculateTotalRevenue(users);
-        const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, start, end);
-        setTotalRevenue(totalRevenue);
-        setAvgDailyMRR(avgDailyMRR);
-        setMrrTrajectory(mrrTrajectory);
-        const revenueTrendData = aggregateRevenueByDay(users);
-        console.log(revenueTrendData, 'revenue trend data')
-        setRevenueTrendData(revenueTrendData);
-      })
-      .catch(error => {
-        console.error('Error fetching users:', error);
+        return {
+          ...user,
+          mailgun_connected: user.mailgun_connected === "true" || user.mailgun_connected === true,
+          has_had_first_transaction: hasIncome || user.has_had_first_transaction === "true" || user.has_had_first_transaction === true,
+          payment_processor_integration: user.payment_processor_integration === "True" || user.payment_processor_integration === true,
+          relative_created_time: user.relative_created_time ? parseRelativeTime(user.relative_created_time) : new Date(), // Handle undefined relative_created_time
+          demo_call: user.demo_call ? {
+            scheduled_call: user.demo_call.scheduled_call,
+            completed_call: user.demo_call.completed_call,
+            appointment_time: user.demo_call.appointment_time // Include appointment_time
+          } : { scheduled_call: false, completed_call: false, appointment_time: null },
+          onboarding_call: user.onboarding_call ? {
+            scheduled_call: user.onboarding_call.scheduled_call,
+            completed_call: user.onboarding_call.completed_call,
+            appointment_time: user.onboarding_call.appointment_time // Include appointment_time
+          } : { scheduled_call: false, completed_call: false, appointment_time: null }
+        };
       });
+      console.log('Processed users:', users);
+      setUsers(users);
+      setFilteredUsers(users.filter(user => user.account_status !== 'Unknown'));
+      updateCards(users.filter(user => user.account_status !== 'Unknown'));
+      const totalRevenue = calculateTotalRevenue(users);
+      const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, start, end);
+      setTotalRevenue(totalRevenue);
+      setAvgDailyMRR(avgDailyMRR);
+      setMrrTrajectory(mrrTrajectory);
+      const revenueTrendData = aggregateRevenueByDay(users);
+      console.log(revenueTrendData, 'revenue trend data')
+      setRevenueTrendData(revenueTrendData);
+    })
+    .catch(error => {
+      console.error('Error fetching users:', error);
+    });
   };
 
   const calculateTotalRevenue = (users) => {
@@ -627,12 +632,18 @@ const aggregateRevenueByDay = (users) => {
             (filters.firstTransaction === 'all' || (filters.firstTransaction === 'true' && user.has_had_first_transaction) || (filters.firstTransaction === 'false' && !user.has_had_first_transaction)) &&
             (filters.mailgun === 'all' || (filters.mailgun === 'true' && user.mailgun_connected) || (filters.mailgun === 'false' && !user.mailgun_connected)) &&
             (filters.paymentProcessor === 'all' || (filters.paymentProcessor === 'True' && user.payment_processor_integration) || (filters.paymentProcessor === 'False' && !user.payment_processor_integration)) &&
-            (filters.demoScheduled === 'all' || 
-              (filters.demoScheduled === 'true' && user.demo_call?.scheduled_call) || 
+            (filters.demoScheduled === 'all' ||
+              (filters.demoScheduled === 'true' && user.demo_call?.scheduled_call) ||
               (filters.demoScheduled === 'false' && (!user.demo_call || !user.demo_call.scheduled_call))) &&
-            (filters.onboardingScheduled === 'all' || 
-              (filters.onboardingScheduled === 'true' && user.onboarding_call?.scheduled_call) || 
+            (filters.onboardingScheduled === 'all' ||
+              (filters.onboardingScheduled === 'true' && user.onboarding_call?.scheduled_call) ||
               (filters.onboardingScheduled === 'false' && (!user.onboarding_call || !user.onboarding_call.scheduled_call))) &&
+            (filters.demoCompleted === 'all' ||
+              (filters.demoCompleted === 'true' && user.demo_call?.completed_call === true) ||
+              (filters.demoCompleted === 'false' && user.demo_call?.completed_call === false)) &&
+            (filters.onboardingCompleted === 'all' ||
+              (filters.onboardingCompleted === 'true' && user.onboarding_call?.completed_call === true) ||
+              (filters.onboardingCompleted === 'false' && user.onboarding_call?.completed_call === false)) &&
             planMatch &&
             statusMatch;
         });
@@ -784,3 +795,5 @@ const aggregateRevenueByDay = (users) => {
     `}</style>
   </>
 );};
+
+
