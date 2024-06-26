@@ -28,7 +28,6 @@ export default function Home() {
     date.setDate(date.getDate() - 7);
     return date;
   });
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalCallType, setModalCallType] = useState('');
   const [modalUser, setModalUser] = useState(null);
@@ -131,8 +130,11 @@ export default function Home() {
               scheduled_call: user.demo_call.scheduled_call,
               completed_call: user.demo_call.completed_call,
               appointment_time: user.demo_call.appointment_time, // Include appointment_time
-              employee_name: user.demo_call.employee_name // Include employee_name
-            } : { scheduled_call: false, completed_call: false, appointment_time: null, employee_name: null },
+              employee_name: user.demo_call.employee_name, // Include employee_name
+              joined_higher_plan_after_call: user.demo_call.joined_higher_plan_after_call,
+              paid_early_after_call: user.demo_call.paid_early_after_call,
+              sale_upgrade_after_call: user.demo_call.sale_upgrade_after_call
+            } : { scheduled_call: false, completed_call: false, appointment_time: null, employee_name: null, joined_higher_plan_after_call: false, paid_early_after_call: false, sale_upgrade_after_call: false },
             onboarding_call: user.onboarding_call ? {
               scheduled_call: user.onboarding_call.scheduled_call,
               completed_call: user.onboarding_call.completed_call,
@@ -140,20 +142,17 @@ export default function Home() {
             } : { scheduled_call: false, completed_call: false, appointment_time: null }
           };
         });
-
-        console.log('Processed users:', users);
+        // console.log('Processed users:', users);
         setUsers(users);
         setFilteredUsers(users.filter(user => user.account_status !== 'Unknown'));
         updateCards(users.filter(user => user.account_status !== 'Unknown'));
-
         const totalRevenue = calculateTotalRevenue(users);
         const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, start, end);
         setTotalRevenue(totalRevenue);
         setAvgDailyMRR(avgDailyMRR);
         setMrrTrajectory(mrrTrajectory);
-
         const revenueTrendData = aggregateRevenueByDay(users);
-        console.log(revenueTrendData, 'revenue trend data');
+        // console.log(revenueTrendData, 'revenue trend data');
         setRevenueTrendData(revenueTrendData);
       })
       .catch(error => {
@@ -252,10 +251,11 @@ export default function Home() {
         return { price: '$97', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Starter
       default:
       case 'prod_M6Iy3zjRHbDmm8':
-        console.log(productId, 'productid');
+        // console.log(productId, 'productid');
         return { price: '$47', style: 'bg-orange-200 border-orange-400 text-orange-800' }; // Default Basic
     }
   };
+
   const formatDemoCompleted = (user) => {
     const demoCall = user.demo_call;
     if (!demoCall || demoCall.scheduled_call === false) {
@@ -295,18 +295,25 @@ export default function Home() {
       return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
     }
   };
+
+  const formatDemoClosed = (user) => {
+    const demoCall = user.demo_call;
+    if (demoCall && (demoCall.joined_higher_plan_after_call || demoCall.paid_early_after_call || demoCall.sale_upgrade_after_call)) {
+      return <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Yes</span>;
+    } else {
+      return <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">No</span>;
+    }
+  };
+
   const renderTable = () => {
     if (!Array.isArray(filteredUsers)) {
       console.error('Expected filteredUsers to be an array, but got:', filteredUsers);
       return null;
     }
-
     return filteredUsers.map(user => {
       const { price, style } = getProductPriceAndStyle(user.product_id);
       const formattedDate = formatDate(user.timestamp);
-
-      console.log('User:', user.location_name, 'Timestamp:', user.timestamp, 'Formatted Date:', formattedDate);
-
+      console.log('User:', user, 'Timestamp:', user.timestamp, 'Formatted Date:', formattedDate);
       return (
         <TableRow key={user.location_id}>
           <TableCell>
@@ -316,7 +323,7 @@ export default function Home() {
               </a>
               <a href={user.contact_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-gray-500 hover:text-gray-700">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                 </svg>
               </a>
             </div>
@@ -335,6 +342,7 @@ export default function Home() {
               <button onClick={() => openReportModal('Demo', user)} className="text-yellow-700 bg-yellow-100 border border-yellow-700 rounded px-2 py-1">Report</button>
             ) : formatDemoCompleted(user)}
           </TableCell>
+          <TableCell>{formatDemoClosed(user)}</TableCell> {/* New Demo Closed Column */}
           <TableCell>{formatHasOnboardingCallScheduled(user.onboarding_call)}</TableCell>
           <TableCell>
             {user.onboarding_call && user.onboarding_call.scheduled_call && user.onboarding_call.completed_call === 'unknown' ? (
@@ -389,7 +397,6 @@ export default function Home() {
     const canceledPercentage = totalUsers ? (canceledCount / totalUsers * 100).toFixed(2) : 0;
     const pastDuePercentage = totalUsers ? (pastDueCount / totalUsers * 100).toFixed(2) : 0;
     const trialingPercentage = totalUsers ? (trialingCount / totalUsers * 100).toFixed(2) : 0;
-
     setStats({
       mailgunPercentage: `${mailgunPercentage}%`,
       mailgunCount: `${mailgunConnectedCount} of ${totalUsers}`,
@@ -469,7 +476,6 @@ export default function Home() {
   const aggregateCumulativeRevenueByDay = (users) => {
     const aggregatedData = {};
     let cumulativeRevenue = 0;
-
     users.forEach(user => {
       const date = new Date(user.timestamp * 1000).toISOString().split('T')[0];
       const { product_id } = user;
@@ -479,7 +485,6 @@ export default function Home() {
       }
       aggregatedData[date] += parseFloat(price.replace('$', '').replace(',', ''));
     });
-
     const result = Object.keys(aggregatedData)
       .sort((a, b) => new Date(a) - new Date(b))
       .map(date => {
@@ -489,7 +494,6 @@ export default function Home() {
           value: cumulativeRevenue,
         };
       });
-
     console.log('Cumulative Revenue Data:', result); // Debug the data
     return result;
   };
@@ -617,11 +621,9 @@ export default function Home() {
       default:
         start = end = new Date();
     }
-
     console.log('Selected Range:', range);
     console.log('Start Date:', start);
     console.log('End Date:', end);
-
     setStartDate(start);
     setEndDate(end);
     fetchData(start, end);
@@ -650,7 +652,6 @@ export default function Home() {
         (filters.plan === 'prod_PpFXqy79vlGOIE' && ['prod_PpFXqy79vlGOIE', 'prod_PdPwwouLLJod3b', 'prod_M6IyZeJydN4vMn'].includes(user.product_id)) ||
         (filters.plan === 'prod_OvDkzhKINbc38T' && ['prod_OvDkzhKINbc38T', 'prod_M6IyfUy0ONYSIw'].includes(user.product_id)) ||
         filters.plan === user.product_id;
-
       return (filters.calendar === 'all' || (filters.calendar === 'true' && user.total_calendars > 0) || (filters.calendar === 'false' && user.total_calendars === 0)) &&
         (filters.product === 'all' || (filters.product === 'true' && user.total_products > 0) || (filters.product === 'false' && user.total_products === 0)) &&
         (filters.firstTransaction === 'all' || (filters.firstTransaction === 'true' && user.has_had_first_transaction) || (filters.firstTransaction === 'false' && !user.has_had_first_transaction)) &&
@@ -671,10 +672,8 @@ export default function Home() {
         planMatch &&
         statusMatch;
     });
-
     setFilteredUsers(filteredUsers);
     updateCards(filteredUsers);
-
     // Recalculate Total Revenue, Daily MRR, and MRR Trajectory
     const totalRevenue = calculateTotalRevenue(filteredUsers);
     const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, startDate, endDate);
@@ -774,6 +773,7 @@ export default function Home() {
                 <TableHeader>Location Name</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('demo_call')}>Demo<br />Scheduled</TableHeader>
                 <TableHeader>Demo<br />Completed</TableHeader>
+                <TableHeader>Demo<br />Closed</TableHeader> {/* New Demo Closed Column Header */}
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('onboarding_call')}>Onboarding<br />Scheduled</TableHeader>
                 <TableHeader>Onboarding<br />Completed</TableHeader>
                 <TableHeader className="cursor-pointer" onClick={() => handleSort('mailgun_connected')}>Mailgun</TableHeader>
@@ -856,4 +856,4 @@ export default function Home() {
       `}</style>
     </>
   );
-}
+};
