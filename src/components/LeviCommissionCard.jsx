@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency } from './utils'; // Ensure this utility function is available
+import { formatCurrency } from '../app/utils'; // Ensure this utility function is available
 
 const getProductPriceAndStyle = (productId) => {
   switch (productId) {
