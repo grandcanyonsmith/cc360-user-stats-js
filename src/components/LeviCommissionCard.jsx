@@ -27,7 +27,8 @@ const calculateLeviCommission = (users) => {
     user.demo_call?.scheduled_call &&
     user.demo_call?.completed_call === true &&
     user.onboarding_call?.scheduled_call &&
-    user.demo_call?.employee_name === 'Levi'
+    user.demo_call?.employee_name === 'Levi' &&
+    (user.demo_call?.paid_early_after_call || user.demo_call?.sale_upgrade_after_call || user.demo_call?.joined_higher_plan_after_call)
   );
 
   const sortedUsers = filteredUsers.sort((a, b) => new Date(b.demo_call.appointment_time) - new Date(a.demo_call.appointment_time));
@@ -40,7 +41,7 @@ const calculateLeviCommission = (users) => {
   }, 0);
 
   return { totalRevenue, sortedUsers };
-};
+};  
 
 const formatDate = (dateString) => {
   const options = { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
@@ -61,7 +62,6 @@ const LeviCommissionCard = ({ users }) => {
           const basePrice = parseFloat(price.replace('$', '').replace(',', ''));
           const commission = ['prod_NC25k0PnePTpDK', 'prod_PuhtpFfKP74tSq'].includes(user.product_id) ? 500 : basePrice;
           const userName = user.location_name.replace("'s Account", '');
-
           return (
             <React.Fragment key={user.location_id}>
               {index > 0 && <hr className="my-2" />}

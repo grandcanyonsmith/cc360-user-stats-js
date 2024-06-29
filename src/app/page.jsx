@@ -362,6 +362,7 @@ const Home = () => {
         };
       });
   };
+
   const handleFilterChange = (filters) => {
     setFilterState(filters);
     const filteredUsers = users.filter(user => {
@@ -438,7 +439,7 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="flex flex-col sm:flex-row sm:flex-grow sm:space-x-4">
               <div className="hidden sm:block">
-                <SalesDatePicker
+              <SalesDatePicker
                   startDate={startDate}
                   setStartDate={setStartDate}
                   endDate={endDate}

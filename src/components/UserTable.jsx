@@ -2,7 +2,6 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
 import CallReportingModal from '../app/CallReportingModal'; // Import the modal component
 
-
 const UserTable = ({
   filteredUsers,
   handleSort,
@@ -24,6 +23,7 @@ const UserTable = ({
   formatAccountStatus,
   activeTab // Receive activeTab prop
 }) => {
+
   const categorizeUsers = (users) => {
     const categories = {
       closed: [],
@@ -79,6 +79,7 @@ const UserTable = ({
     return users.map(user => {
       const { price, style } = getProductPriceAndStyle(user.product_id);
       const formattedDate = formatShortDate(user.timestamp);
+
       return (
         <TableRow key={user.location_id}>
           <TableCell className="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-0">
@@ -114,8 +115,14 @@ const UserTable = ({
           <TableCell className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{formatHasOnboardingCallScheduled(user.onboarding_call)}</TableCell>
           {activeTab !== 'Sales' && (
             <>
-              <TableCell className="whitespace-nowrap px-2 py-2 text-sm text-gray-500"><span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}></span>{formatMailgunConnected(user.mailgun_connected)}</TableCell>
-              <TableCell className="whitespace-nowrap px-2 py-2 text-sm text-gray-500"><span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}></span>{formatPaymentProcessor(user.payment_processor_integration)}</TableCell>
+              <TableCell className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
+                <span className={`text-xs font-semibold ${user.mailgun_connected ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}></span>
+                {formatMailgunConnected(user.mailgun_connected)}
+              </TableCell>
+              <TableCell className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
+                <span className={`text-xs font-semibold ${user.payment_processor_integration ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'} rounded-full`}></span>
+                {formatPaymentProcessor(user.payment_processor_integration)}
+              </TableCell>
             </>
           )}
         </TableRow>
@@ -161,28 +168,24 @@ const UserTable = ({
                       </th>
                     </tr>
                     {renderTable(categorizedUsers.closed)}
-
                     <tr className="border-t border-gray-200">
                       <th colSpan="6" scope="colgroup" className="bg-gray-50 py-2 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-3">
                         Not Closed ({formatCurrency(calculateTotalRevenue(categorizedUsers.notClosed))} - Total {categorizedUsers.notClosed.length})
                       </th>
                     </tr>
                     {renderTable(categorizedUsers.notClosed)}
-
                     <tr className="border-t border-gray-200">
                       <th colSpan="6" scope="colgroup" className="bg-gray-50 py-2 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-3">
                         No Show ({formatCurrency(calculateTotalRevenue(categorizedUsers.noShow))} - Total {categorizedUsers.noShow.length})
                       </th>
                     </tr>
                     {renderTable(categorizedUsers.noShow)}
-
                     <tr className="border-t border-gray-200">
                       <th colSpan="6" scope="colgroup" className="bg-gray-50 py-2 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-3">
                         No Onboarding Scheduled ({formatCurrency(calculateTotalRevenue(categorizedUsers.noOnboardingScheduled))} - Total {categorizedUsers.noOnboardingScheduled.length})
                       </th>
                     </tr>
                     {renderTable(categorizedUsers.noOnboardingScheduled)}
-
                     <tr className="border-t border-gray-200">
                       <th colSpan="6" scope="colgroup" className="bg-gray-50 py-2 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-3">
                         Needs Reporting ({formatCurrency(calculateTotalRevenue(categorizedUsers.needsReporting))} - Total {categorizedUsers.needsReporting.length})
