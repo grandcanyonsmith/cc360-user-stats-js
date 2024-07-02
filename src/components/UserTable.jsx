@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
 import CallReportingModal from '../app/CallReportingModal'; // Import the modal component
 import ReportButton from '@/components/ReportButton'; // Import the ReportButton component
@@ -14,7 +14,10 @@ import {
   formatCurrency,
   getStatusBgColor,
 } from '../app/utils';
-
+const formatShortDate = (date) => {
+  const options = { weekday: 'short', month: 'short', day: 'numeric' };
+  return new Date(date).toLocaleDateString('en-US', options);
+};
 const TableCellWithTooltip = ({ user }) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -45,10 +48,7 @@ const TableCellWithTooltip = ({ user }) => {
     </TableCell>
   );
 };
-const formatShortDate = (date) => {
-  const options = { weekday: 'short', month: 'short', day: 'numeric' };
-  return new Date(date).toLocaleDateString('en-US', options);
-};
+
 const UserTable = ({
   filteredUsers,
   handleSort,
@@ -61,6 +61,12 @@ const UserTable = ({
   activeTab, // Receive activeTab prop
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(null);
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [sortField, setSortField] = useState('signup_date');
+
+  useEffect(() => {
+    sortUsers(filteredUsers);
+  }, [sortField]);
 
   const handleDropdownToggle = (index) => {
     setDropdownOpen(dropdownOpen === index ? null : index);
@@ -71,8 +77,23 @@ const UserTable = ({
     setDropdownOpen(null);
   };
 
+  const handleSortChange = (field) => {
+    setSortField(field);
+    setSortDropdownOpen(false);
+  };
+
+  const sortUsers = (users) => {
+    if (sortField === 'signup_date') {
+      return users.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    } else if (sortField === 'demo_date') {
+      return users.sort((a, b) => new Date(b.demo_call?.appointment_time) - new Date(a.demo_call?.appointment_time));
+    }
+    return users;
+  };
+
   const renderTable = (users) => {
-    return users.map((user, index) => {
+    const sortedUsers = sortUsers(users);
+    return sortedUsers.map((user, index) => {
       const { price, style } = getProductPriceAndStyle(user.product_id);
       const formattedDate = formatShortDate(user.timestamp);
       return (
@@ -167,6 +188,40 @@ const UserTable = ({
         <div className="sm:flex-auto">
           <h1 className="text-base font-semibold leading-6 text-gray-900">User Data</h1>
           <p className="mt-2 text-sm text-gray-700">Overview of user data based on the selected date range.</p>
+        </div>
+        <div className="relative inline-block text-left">
+          <button
+            type="button"
+            className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+            onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+          >
+            Sort
+            <svg className="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {sortDropdownOpen && (
+            <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                <a
+                  href="#"
+                  className="block px-4 py-2 text-sm text-gray-700"
+                  role="menuitem"
+                  onClick={() => handleSortChange('signup_date')}
+                >
+                  Sort by Signup Date
+                </a>
+                <a
+                  href="#"
+                  className="block px-4 py-2 text-sm text-gray-700"
+                  role="menuitem"
+                  onClick={() => handleSortChange('demo_date')}
+                >
+                  Sort by Scheduled Demo Date
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <div className="mt-8 flow-root">
