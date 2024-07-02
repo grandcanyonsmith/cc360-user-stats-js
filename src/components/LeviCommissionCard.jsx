@@ -2,24 +2,18 @@ import React from 'react';
 import { formatCurrency } from '../app/utils'; // Ensure this utility function is available
 
 const getProductPriceAndStyle = (productId) => {
-  switch (productId) {
-    case 'prod_NC25k0PnePTpDK':
-    case 'prod_PuhtpFfKP74tSq':
-      return { price: '$1,500', style: 'bg-gray-800 border-blue-500 text-white font-bold' };
-    case 'prod_PpFYdvqmj38F2I':
-      return { price: '$297', style: 'bg-yellow-200 border-yellow-400 text-yellow-800' };
-    case 'prod_PpFXqy79vlGOIE':
-    case 'prod_PdPwwouLLJod3b':
-    case 'prod_M6IyZeJydN4vMn':
-      return { price: '$147', style: 'bg-gray-200 border-gray-400 text-gray-800' };
-    case 'prod_OvDkzhKINbc38T':
-    case 'prod_M6IyfUy0ONYSIw':
-      return { price: '$97', style: 'bg-orange-200 border-orange-400 text-orange-800' };
-    default:
-    case 'prod_M6Iy3zjRHbDmm8':
-      console.log(productId, 'productid');
-      return { price: '$47', style: 'bg-orange-200 border-orange-400 text-orange-800' };
-  }
+  const productMap = {
+    'prod_NC25k0PnePTpDK': { price: '$1,500', style: 'bg-gray-800 border-blue-500 text-white font-bold' },
+    'prod_PuhtpFfKP74tSq': { price: '$1,500', style: 'bg-gray-800 border-blue-500 text-white font-bold' },
+    'prod_PpFYdvqmj38F2I': { price: '$297', style: 'bg-yellow-200 border-yellow-400 text-yellow-800' },
+    'prod_PpFXqy79vlGOIE': { price: '$147', style: 'bg-gray-200 border-gray-400 text-gray-800' },
+    'prod_PdPwwouLLJod3b': { price: '$147', style: 'bg-gray-200 border-gray-400 text-gray-800' },
+    'prod_M6IyZeJydN4vMn': { price: '$147', style: 'bg-gray-200 border-gray-400 text-gray-800' },
+    'prod_OvDkzhKINbc38T': { price: '$97', style: 'bg-orange-200 border-orange-400 text-orange-800' },
+    'prod_M6IyfUy0ONYSIw': { price: '$97', style: 'bg-orange-200 border-orange-400 text-orange-800' },
+    'prod_M6Iy3zjRHbDmm8': { price: '$47', style: 'bg-orange-200 border-orange-400 text-orange-800' },
+  };
+  return productMap[productId] || { price: '$47', style: 'bg-orange-200 border-orange-400 text-orange-800' };
 };
 
 const calculateLeviCommission = (users) => {
@@ -32,7 +26,6 @@ const calculateLeviCommission = (users) => {
   );
 
   const sortedUsers = filteredUsers.sort((a, b) => new Date(b.demo_call.appointment_time) - new Date(a.demo_call.appointment_time));
-
   const totalRevenue = sortedUsers.reduce((sum, user) => {
     const { price } = getProductPriceAndStyle(user.product_id);
     const basePrice = parseFloat(price.replace('$', '').replace(',', ''));
@@ -41,7 +34,7 @@ const calculateLeviCommission = (users) => {
   }, 0);
 
   return { totalRevenue, sortedUsers };
-};  
+};
 
 const formatDate = (dateString) => {
   const options = { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
@@ -50,7 +43,6 @@ const formatDate = (dateString) => {
 
 const LeviCommissionCard = ({ users }) => {
   const { totalRevenue, sortedUsers } = calculateLeviCommission(users);
-
   return (
     <div className="flex flex-col bg-white p-4 shadow rounded-md h-64 overflow-y-auto">
       <dt className="text-sm font-semibold leading-6 text-gray-600 text-left">Levi Commission</dt>

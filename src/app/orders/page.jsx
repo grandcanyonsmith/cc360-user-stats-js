@@ -5,7 +5,6 @@ import { Button } from '@/components/button';
 import { Heading } from '@/components/heading';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/table';
 
-
 export default function SalesDataFetcher() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -40,7 +39,7 @@ export default function SalesDataFetcher() {
       body: JSON.stringify({ start_date: startDate, end_date: endDate }),
     });
     const data = await response.json();
-    console.log(data,'data')
+    console.log(data, 'data');
     processSalesData(data);
   };
 
@@ -52,7 +51,6 @@ export default function SalesDataFetcher() {
     let noDemoCompletedRevenue = 0;
     let noDemoCompletedSalesAmount = 0;
     const sourceCounts = {};
-
     const groupedData = data.filter(item => {
       if (item["Product Name"] === "Demo Completed Totals") {
         demoCompletedRevenue = item.Total_Revenue;
@@ -81,7 +79,6 @@ export default function SalesDataFetcher() {
           demoCompleted: item["Demo Completed"],
           source: item["Sources"][index],
         });
-
         if (!sourceCounts[email]) {
           sourceCounts[email] = item["Sources"][index];
         }
@@ -145,29 +142,11 @@ export default function SalesDataFetcher() {
               <p className="mt-4 text-lg leading-8 text-gray-300">Overview of sales data based on the selected date range.</p>
             </div>
             <dl className="mt-16 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-5">
-              <div className="flex flex-col bg-white/5 p-8">
-                <dt className="text-sm font-semibold leading-6 text-gray-300">Total</dt>
-                <dd className="order-first text-3xl font-semibold tracking-tight text-white">{formatCurrency(totals.totalRevenue)}</dd>
-                <dd className="text-sm font-semibold leading-6 text-gray-300">Sales Amount: {totals.totalSalesAmount}</dd>
-              </div>
-              <div className="flex flex-col bg-white/5 p-8">
-                <dt className="text-sm font-semibold leading-6 text-gray-300">Demo Completed</dt>
-                <dd className="order-first text-3xl font-semibold tracking-tight text-white">{formatCurrency(totals.demoCompletedRevenue)}</dd>
-                <dd className="text-sm font-semibold leading-6 text-gray-300">Sales Amount: {totals.demoCompletedSalesAmount}</dd>
-              </div>
-              <div className="flex flex-col bg-white/5 p-8">
-                <dt className="text-sm font-semibold leading-6 text-gray-300">No Demo Completed</dt>
-                <dd className="order-first text-3xl font-semibold tracking-tight text-white">{formatCurrency(totals.noDemoCompletedRevenue)}</dd>
-                <dd className="text-sm font-semibold leading-6 text-gray-300">Sales Amount: {totals.noDemoCompletedSalesAmount}</dd>
-              </div>
-              <div className="flex flex-col bg-white/5 p-8">
-                <dt className="text-sm font-semibold leading-6 text-gray-300">Avg. Daily MRR Increase</dt>
-                <dd className="order-first text-3xl font-semibold tracking-tight text-white">{formatCurrency(totals.avgDailyMRR)}</dd>
-              </div>
-              <div className="flex flex-col bg-white/5 p-8">
-                <dt className="text-sm font-semibold leading-6 text-gray-300">MRR Increase Trajectory</dt>
-                <dd className="order-first text-3xl font-semibold tracking-tight text-white">{formatCurrency(totals.mrrTrajectory)}</dd>
-              </div>
+              <DataCard title="Total" value={formatCurrency(totals.totalRevenue)} subtitle={`Sales Amount: ${totals.totalSalesAmount}`} />
+              <DataCard title="Demo Completed" value={formatCurrency(totals.demoCompletedRevenue)} subtitle={`Sales Amount: ${totals.demoCompletedSalesAmount}`} />
+              <DataCard title="No Demo Completed" value={formatCurrency(totals.noDemoCompletedRevenue)} subtitle={`Sales Amount: ${totals.noDemoCompletedSalesAmount}`} />
+              <DataCard title="Avg. Daily MRR Increase" value={formatCurrency(totals.avgDailyMRR)} />
+              <DataCard title="MRR Increase Trajectory" value={formatCurrency(totals.mrrTrajectory)} />
             </dl>
           </div>
         </div>
@@ -181,54 +160,70 @@ export default function SalesDataFetcher() {
             <input type="date" id="end_date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 mr-4" />
             <Button onClick={fetchSalesData} className="rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Fetch Sales Data</Button>
           </div>
-          <Table className="mt-8 [--gutter:theme(spacing.6)] lg:[--gutter:theme(spacing.10)]">
-            <TableHead>
-              <TableRow>
-                <TableHeader>Product Name</TableHeader>
-                <TableHeader>Price</TableHeader>
-                <TableHeader>Demo Completed</TableHeader>
-                <TableHeader>Total Revenue</TableHeader>
-                <TableHeader>Sales Amount</TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {groupedData.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item["Product Name"]}</TableCell>
-                  <TableCell>{formatCurrency(item.Price)}</TableCell>
-                  <TableCell>{item["Demo Completed"]}</TableCell>
-                  <TableCell>{formatCurrency(item.Total_Revenue)}</TableCell>
-                  <TableCell>{item.Sales_Amount}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Table className="mt-8 [--gutter:theme(spacing.6)] lg:[--gutter:theme(spacing.10)]">
-            <TableHead>
-              <TableRow>
-                <TableHeader>Sale Date</TableHeader>
-                <TableHeader>Email</TableHeader>
-                <TableHeader>Product Name</TableHeader>
-                <TableHeader>Price</TableHeader>
-                <TableHeader>Demo Completed</TableHeader>
-                <TableHeader>Sources</TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {detailedData.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{formatDate(item.saleDate)}</TableCell>
-                  <TableCell>{item.email}</TableCell>
-                  <TableCell>{item.productName}</TableCell>
-                  <TableCell>{formatCurrency(item.price)}</TableCell>
-                  <TableCell>{item.demoCompleted}</TableCell>
-                  <TableCell>{item.source}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <SalesTable data={groupedData} formatCurrency={formatCurrency} />
+          <DetailedSalesTable data={detailedData} formatDate={formatDate} formatCurrency={formatCurrency} />
         </div>
       </div>
     </>
   );
 }
+
+const DataCard = ({ title, value, subtitle }) => (
+  <div className="flex flex-col bg-white/5 p-8">
+    <dt className="text-sm font-semibold leading-6 text-gray-300">{title}</dt>
+    <dd className="order-first text-3xl font-semibold tracking-tight text-white">{value}</dd>
+    {subtitle && <dd className="text-sm font-semibold leading-6 text-gray-300">{subtitle}</dd>}
+  </div>
+);
+
+const SalesTable = ({ data, formatCurrency }) => (
+  <Table className="mt-8 [--gutter:theme(spacing.6)] lg:[--gutter:theme(spacing.10)]">
+    <TableHead>
+      <TableRow>
+        <TableHeader>Product Name</TableHeader>
+        <TableHeader>Price</TableHeader>
+        <TableHeader>Demo Completed</TableHeader>
+        <TableHeader>Total Revenue</TableHeader>
+        <TableHeader>Sales Amount</TableHeader>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {data.map((item, index) => (
+        <TableRow key={index}>
+          <TableCell>{item["Product Name"]}</TableCell>
+          <TableCell>{formatCurrency(item.Price)}</TableCell>
+          <TableCell>{item["Demo Completed"]}</TableCell>
+          <TableCell>{formatCurrency(item.Total_Revenue)}</TableCell>
+          <TableCell>{item.Sales_Amount}</TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+);
+
+const DetailedSalesTable = ({ data, formatDate, formatCurrency }) => (
+  <Table className="mt-8 [--gutter:theme(spacing.6)] lg:[--gutter:theme(spacing.10)]">
+    <TableHead>
+      <TableRow>
+        <TableHeader>Sale Date</TableHeader>
+        <TableHeader>Email</TableHeader>
+        <TableHeader>Product Name</TableHeader>
+        <TableHeader>Price</TableHeader>
+        <TableHeader>Demo Completed</TableHeader>
+        <TableHeader>Sources</TableHeader>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {data.map((item, index) => (
+        <TableRow key={index}>
+          <TableCell>{formatDate(item.saleDate)}</TableCell>
+          <TableCell>{item.email}</TableCell>
+          <TableCell>{item.productName}</TableCell>
+          <TableCell>{formatCurrency(item.price)}</TableCell>
+          <TableCell>{item.demoCompleted}</TableCell>
+          <TableCell>{item.source}</TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+);

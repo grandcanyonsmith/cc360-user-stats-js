@@ -13,7 +13,10 @@ import {
   formatHasDemoCallScheduled,
   formatHasOnboardingCallScheduled,
   formatCurrency,
-  formatDate
+  formatDate,
+  formatDemoCompleted, // Import here
+  formatDemoClosed,
+  getStatusBgColor,
 } from './utils';
 import Filters from '@/components/Filters';
 import CombinedStatusCard from '@/components/CombinedStatusCard';
@@ -24,6 +27,7 @@ import StatCard from '@/components/StatCard';
 import TrendGraph from '@/components/TrendGraph';
 import StatusBadge from '@/components/StatusBadge';
 import ReportButton from '@/components/ReportButton';
+import CallReportingModal from '../app/CallReportingModal'; // Ensure this import is correct
 
 const Home = () => {
   const [startDate, setStartDate] = useState(() => {
@@ -72,14 +76,17 @@ const Home = () => {
       }, {
         headers: { 'Content-Type': 'application/json' }
       });
+
       if (!Array.isArray(response.data)) {
         console.error('Expected response data to be an array, but got:', response.data);
         return;
       }
+
       const processedUsers = processUsers(response.data);
       setUsers(processedUsers);
       setFilteredUsers(processedUsers.filter(user => user.account_status !== 'Unknown'));
       updateCards(processedUsers.filter(user => user.account_status !== 'Unknown'));
+
       const totalRevenue = calculateTotalRevenue(processedUsers);
       const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, start, end);
       setTotalRevenue(totalRevenue);
@@ -89,6 +96,18 @@ const Home = () => {
     } catch (error) {
       console.error('Error fetching users:', error);
     }
+  };
+
+  const openReportModal = (callType, user) => {
+    setModalCallType(callType);
+    setModalUser(user);
+    setIsModalOpen(true);
+  };
+
+  const closeReportModal = () => {
+    setIsModalOpen(false);
+    setModalCallType('');
+    setModalUser(null);
   };
 
   const processUsers = (users) => {
@@ -195,7 +214,7 @@ const Home = () => {
     return productMap[productId] || { price: '$47', style: 'bg-orange-200 border-orange-400 text-orange-800' };
   };
 
-  const formatDemoCompleted = (user) => {
+  const formatDemoCompleted = (user,openReportModal) => {
     const demoCall = user.demo_call;
     if (!demoCall || demoCall.scheduled_call === false) {
       return <StatusBadge status="No" color="red" />;
@@ -205,6 +224,7 @@ const Home = () => {
       return <ReportButton callType="Demo" user={user} openReportModal={openReportModal} />;
     }
   };
+
 
   const formatOnboardingCompleted = (user) => {
     const onboardingCall = user.onboarding_call;
@@ -402,17 +422,17 @@ const Home = () => {
     setMrrTrajectory(mrrTrajectory);
   };
 
-  const openReportModal = (callType, user) => {
-    setModalCallType(callType);
-    setModalUser(user);
-    setIsModalOpen(true);
-  };
+  // const openReportModal = (callType, user) => {
+  //   setModalCallType(callType);
+  //   setModalUser(user);
+  //   setIsModalOpen(true);
+  // };
 
-  const closeReportModal = () => {
-    setIsModalOpen(false);
-    setModalCallType('');
-    setModalUser(null);
-  };
+  // const closeReportModal = () => {
+  //   setIsModalOpen(false);
+  //   setModalCallType('');
+  //   setModalUser(null);
+  // };
 
   return (
     <>
@@ -439,7 +459,7 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="flex flex-col sm:flex-row sm:flex-grow sm:space-x-4">
               <div className="hidden sm:block">
-              <SalesDatePicker
+                <SalesDatePicker
                   startDate={startDate}
                   setStartDate={setStartDate}
                   endDate={endDate}
@@ -493,8 +513,8 @@ const Home = () => {
       <UserTable
         filteredUsers={filteredUsers}
         handleSort={handleSort}
-        openReportModal={openReportModal}
-        formatDemoCompleted={formatDemoCompleted}
+        openReportModal={openReportModal} // Pass the function here
+        formatDemoCompleted={formatDemoCompleted} // Pass the function here
         formatDemoClosed={formatDemoClosed}
         formatHasDemoCallScheduled={formatHasDemoCallScheduled}
         formatHasOnboardingCallScheduled={formatHasOnboardingCallScheduled}
@@ -524,6 +544,12 @@ const Home = () => {
           </div>
         </div>
       )}
+      <CallReportingModal
+        isOpen={isModalOpen}
+        onClose={closeReportModal}
+        callType={modalCallType}
+        user={modalUser}
+      />
     </>
   );
 };

@@ -10,3 +10,4 @@ const ReportButton = ({ callType, user, openReportModal }) => (
 );
 
 export default ReportButton;
+

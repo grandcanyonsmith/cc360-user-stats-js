@@ -29,7 +29,9 @@ const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
       alert('Please fill out all required fields.');
       return;
     }
+
     setIsSubmitting(true);
+
     const callTypeKey = callType === 'Demo' ? 'demo_call' : callType === 'Onboarding' ? 'onboarding_call' : callType;
     const formData = {
       location_id: user.location_id,
@@ -38,7 +40,9 @@ const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
       employee_name: selectedWho,
       zoomUrl: zoomUrl,
     };
+
     console.log(formData, 'form data here');
+
     try {
       const response = await axios.post('https://d7rlgxm43l4znqhydjb7wbxf5y0lruda.lambda-url.us-west-2.on.aws/', formData, {
         headers: {
@@ -194,6 +198,76 @@ const CallReportingModal = ({ isOpen, onClose, callType, user }) => {
                   Cancel
                 </button>
               </div>
+            </div>
+            <div className="flow-root">
+              <ul role="list" className="-mb-8">
+                <li>
+                  <div className="relative pb-8">
+                    <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                    <div className="relative flex space-x-3">
+                      <div>
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-400 ring-8 ring-white">
+                          <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+                          </svg>
+                        </span>
+                      </div>
+                      <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                        <div>
+                          <p className="text-sm text-gray-500">Created account</p>
+                        </div>
+                        <div className="whitespace-nowrap text-right text-sm text-gray-500">
+                          <time dateTime={formatJoinTime(user?.timestamp)}>{formatJoinTime(user?.timestamp)}</time>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div className="relative pb-8">
+                    <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                    <div className="relative flex space-x-3">
+                      <div>
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 ring-8 ring-white">
+                          <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M1 8.25a1.25 1.25 0 112.5 0v7.5a1.25 1.25 0 11-2.5 0v-7.5zM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0114 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 01-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 01-1.341-.317l-2.734-1.366A3 3 0 006.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 012.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388z" />
+                          </svg>
+                        </span>
+                      </div>
+                      <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                        <div>
+                          <p className="text-sm text-gray-500">Demo call</p>
+                        </div>
+                        <div className="whitespace-nowrap text-right text-sm text-gray-500">
+                          <time dateTime={formatAppointmentTime(user?.demo_call?.appointment_time)}>{formatAppointmentTime(user?.demo_call?.appointment_time)}</time>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div className="relative pb-8">
+                    <span className="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                    <div className="relative flex space-x-3">
+                      <div>
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 ring-8 ring-white">
+                          <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                          </svg>
+                        </span>
+                      </div>
+                      <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                        <div>
+                          <p className="text-sm text-gray-500">Onboarding call</p>
+                        </div>
+                        <div className="whitespace-nowrap text-right text-sm text-gray-500">
+                          <time dateTime={formatAppointmentTime(user?.onboarding_call?.appointment_time)}>{formatAppointmentTime(user?.onboarding_call?.appointment_time)}</time>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
