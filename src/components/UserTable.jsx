@@ -5,7 +5,7 @@ import ReportButton from '@/components/ReportButton'; // Import the ReportButton
 import {
   formatHasDemoCallScheduled,
   formatHasOnboardingCallScheduled,
-  formatDemoCompleted, // Ensure correct import
+  formatDemoCompleted,
   formatDemoClosed,
   formatMailgunConnected,
   formatPaymentProcessor,
@@ -14,18 +14,18 @@ import {
   formatCurrency,
   getStatusBgColor,
 } from '../app/utils';
+
 const formatShortDate = (date) => {
   const options = { weekday: 'short', month: 'short', day: 'numeric' };
   return new Date(date).toLocaleDateString('en-US', options);
 };
+
 const TableCellWithTooltip = ({ user }) => {
   const [showTooltip, setShowTooltip] = useState(false);
-
   const handleToggleTooltip = () => {
     console.log(`Scheduled call time: ${user.demo_call.appointment_time}`);
     setShowTooltip(!showTooltip);
   };
-
   return (
     <TableCell className="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
       {user.demo_call && user.demo_call.scheduled_call ? (
@@ -59,6 +59,7 @@ const UserTable = ({
   modalCallType,
   getProductPriceAndStyle,
   activeTab, // Receive activeTab prop
+  openEditForm, // Receive openEditForm prop
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
@@ -73,7 +74,7 @@ const UserTable = ({
   };
 
   const handleEditClick = (user) => {
-    openReportModal('Edit', user);
+    openEditForm(user);
     setDropdownOpen(null);
   };
 
@@ -197,7 +198,7 @@ const UserTable = ({
           >
             Sort
             <svg className="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           {sortDropdownOpen && (

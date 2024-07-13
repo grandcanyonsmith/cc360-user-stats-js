@@ -4,6 +4,18 @@ import axios from 'axios';
 import SalesDatePicker from './SalesDatePicker';
 import { Button } from '@/components/button';
 import { Heading } from '@/components/heading';
+import Filters from '@/components/Filters';
+import CombinedStatusCard from '@/components/CombinedStatusCard';
+import LeviCommissionCard from '@/components/LeviCommissionCard';
+import Tabs from '@/components/Tabs';
+import UserTable from '@/components/UserTable';
+import StatCard from '@/components/StatCard';
+import TrendGraph from '@/components/TrendGraph';
+import StatusBadge from '@/components/StatusBadge';
+import ReportButton from '@/components/ReportButton';
+import CallReportingModal from '../app/CallReportingModal';
+import DemoClosedCard from './DemoClosedCard';
+import UserEditForm from './UserEditForm'; // Import the new component
 import {
   formatIncome,
   formatFirstTransaction,
@@ -14,20 +26,10 @@ import {
   formatHasOnboardingCallScheduled,
   formatCurrency,
   formatDate,
-  formatDemoCompleted, // Import here
+  formatDemoCompleted,
   formatDemoClosed,
   getStatusBgColor,
 } from './utils';
-import Filters from '@/components/Filters';
-import CombinedStatusCard from '@/components/CombinedStatusCard';
-import LeviCommissionCard from '@/components/LeviCommissionCard';
-import Tabs from '@/components/Tabs';
-import UserTable from '@/components/UserTable';
-import StatCard from '@/components/StatCard';
-import TrendGraph from '@/components/TrendGraph';
-import StatusBadge from '@/components/StatusBadge';
-import ReportButton from '@/components/ReportButton';
-import CallReportingModal from '../app/CallReportingModal'; // Ensure this import is correct
 
 const Home = () => {
   const [startDate, setStartDate] = useState(() => {
@@ -54,6 +56,8 @@ const Home = () => {
   const [selectedRange, setSelectedRange] = useState('1W');
   const [filterState, setFilterState] = useState(initialFilterState());
   const [activeTab, setActiveTab] = useState('Home');
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false); // State for edit form
+  const [editUser, setEditUser] = useState(null); // State for the user being edited
 
   useEffect(() => {
     fetchData(startDate, endDate);
@@ -61,32 +65,33 @@ const Home = () => {
 
   useEffect(() => {
     if (activeTab === 'Sales') {
-      setFilterState(prevState => ({
+      setFilterState((prevState) => ({
         ...prevState,
-        demoScheduled: 'true' // Set Demo Scheduled to true when Sales tab is active
+        demoScheduled: 'true', // Set Demo Scheduled to true when Sales tab is active
       }));
     }
   }, [activeTab]);
 
   const fetchData = async (start, end) => {
     try {
-      const response = await axios.post('https://rozduvvh2or5rxgucec3rfdp5e0hupbk.lambda-url.us-west-2.on.aws/', {
-        startDate: start.toISOString().split('T')[0],
-        endDate: end.toISOString().split('T')[0]
-      }, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-
+      const response = await axios.post(
+        'https://rozduvvh2or5rxgucec3rfdp5e0hupbk.lambda-url.us-west-2.on.aws/',
+        {
+          startDate: start.toISOString().split('T')[0],
+          endDate: end.toISOString().split('T')[0],
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
       if (!Array.isArray(response.data)) {
         console.error('Expected response data to be an array, but got:', response.data);
         return;
       }
-
       const processedUsers = processUsers(response.data);
       setUsers(processedUsers);
-      setFilteredUsers(processedUsers.filter(user => user.account_status !== 'Unknown'));
-      updateCards(processedUsers.filter(user => user.account_status !== 'Unknown'));
-
+      setFilteredUsers(processedUsers.filter((user) => user.account_status !== 'Unknown'));
+      updateCards(processedUsers.filter((user) => user.account_status !== 'Unknown'));
       const totalRevenue = calculateTotalRevenue(processedUsers);
       const { avgDailyMRR, mrrTrajectory } = calculateMRR(totalRevenue, start, end);
       setTotalRevenue(totalRevenue);
@@ -108,6 +113,25 @@ const Home = () => {
     setIsModalOpen(false);
     setModalCallType('');
     setModalUser(null);
+  };
+
+  const openEditForm = (user) => {
+    setEditUser(user);
+    setIsEditFormOpen(true);
+  };
+
+  const closeEditForm = () => {
+    setIsEditFormOpen(false);
+    setEditUser(null);
+  };
+
+  const handleSave = (updatedUser) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) => (user.location_id === updatedUser.location_id ? updatedUser : user))
+    );
+    setFilteredUsers((prevFilteredUsers) =>
+      prevFilteredUsers.map((user) => (user.location_id === updatedUser.location_id ? updatedUser : user))
+    );
   };
 
   const processUsers = (users) => {
@@ -422,18 +446,9 @@ const Home = () => {
     setMrrTrajectory(mrrTrajectory);
   };
 
-  // const openReportModal = (callType, user) => {
-  //   setModalCallType(callType);
-  //   setModalUser(user);
-  //   setIsModalOpen(true);
-  // };
 
-  // const closeReportModal = () => {
-  //   setIsModalOpen(false);
-  //   setModalCallType('');
-  //   setModalUser(null);
-  // };
 
+  
   return (
     <>
       <div className="py-12 sm:py-16 bg-white">
@@ -443,19 +458,23 @@ const Home = () => {
             <p className="mt-4 text-lg leading-8 text-gray-600">Overview of user data based on the selected date range.</p>
             <hr className="mt-4 mb-8 border-t border-gray-300" />
           </div>
-          <Tabs activeTab={activeTab} setActiveTab={setActiveTab} onTabChange={(tab) => {
-            setActiveTab(tab);
-            if (tab === 'Sales') {
-              setFilterState(prevState => ({
-                ...prevState,
-                demoScheduled: 'true' // Set Demo Scheduled to true when Sales tab is active
-              }));
-              handleFilterChange({
-                ...filterState,
-                demoScheduled: 'true'
-              });
-            }
-          }} />
+          <Tabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onTabChange={(tab) => {
+              setActiveTab(tab);
+              if (tab === 'Sales') {
+                setFilterState((prevState) => ({
+                  ...prevState,
+                  demoScheduled: 'true', // Set Demo Scheduled to true when Sales tab is active
+                }));
+                handleFilterChange({
+                  ...filterState,
+                  demoScheduled: 'true',
+                });
+              }
+            }}
+          />
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="flex flex-col sm:flex-row sm:flex-grow sm:space-x-4">
               <div className="hidden sm:block">
@@ -468,9 +487,13 @@ const Home = () => {
                 />
               </div>
             </div>
-            <Button className="hidden sm:block sm:ml-auto" onClick={() => setIsFilterPanelOpen(true)}>Filters</Button>
+            <Button className="hidden sm:block sm:ml-auto" onClick={() => setIsFilterPanelOpen(true)}>
+              Filters
+            </Button>
             <div className="block sm:hidden w-full">
-              <Button className="mt-4 w-full" onClick={() => setIsFilterPanelOpen(true)}>Filters</Button>
+              <Button className="mt-4 w-full" onClick={() => setIsFilterPanelOpen(true)}>
+                Filters
+              </Button>
               <SalesDatePicker
                 startDate={startDate}
                 setStartDate={setStartDate}
@@ -483,28 +506,106 @@ const Home = () => {
           <dl className="mt-8 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl text-center sm:grid-cols-3">
             {activeTab === 'Home' && (
               <>
-                <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} isPercentage={true} />
-                <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} isPercentage={true} />
+                <StatCard
+                  title="MailGun Connected"
+                  value={stats.mailgunPercentage}
+                  subtitle={stats.mailgunCount}
+                  trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')}
+                  showGraph={true}
+                  isPercentage={true}
+                />
+                <StatCard
+                  title="Payment Processor Connected"
+                  value={stats.paymentProcessorPercentage}
+                  subtitle={stats.paymentProcessorCount}
+                  trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')}
+                  showGraph={true}
+                  isPercentage={true}
+                />
                 <CombinedStatusCard stats={stats} />
-                <StatCard title="Total Revenue" value={formatCurrency(totalRevenue)} subtitle={`Sum of all revenue`} trendData={aggregateCumulativeRevenueByDay(filteredUsers)} showGraph={true} isPercentage={false} />
-                <StatCard title="Daily MRR" value={formatCurrency(avgDailyMRR)} subtitle={`Average Daily increase`} trendData={revenueTrendData} showGraph={true} isPercentage={false} />
-                <StatCard title="MRR Trajectory" value={formatCurrency(mrrTrajectory)} subtitle={`Projected monthly increase`} trendData={revenueTrendData} showGraph={true} isPercentage={false} />
-                <StatCard title="Demo Call Scheduled" value={stats.demoCallPercentage} subtitle={stats.demoCallCount} trendData={aggregateDataByDay(filteredUsers, 'demo_call')} showGraph={true} isPercentage={true} />
-                <StatCard title="Onboarding Call Scheduled" value={stats.onboardingCallPercentage} subtitle={stats.onboardingCallCount} trendData={aggregateDataByDay(filteredUsers, 'onboarding_call')} showGraph={true} isPercentage={true} />
+                <StatCard
+                  title="Total Revenue"
+                  value={formatCurrency(totalRevenue)}
+                  subtitle={`Sum of all revenue`}
+                  trendData={aggregateCumulativeRevenueByDay(filteredUsers)}
+                  showGraph={true}
+                  isPercentage={false}
+                />
+                <StatCard
+                  title="Daily MRR"
+                  value={formatCurrency(avgDailyMRR)}
+                  subtitle={`Average Daily increase`}
+                  trendData={revenueTrendData}
+                  showGraph={true}
+                  isPercentage={false}
+                />
+                <StatCard
+                  title="MRR Trajectory"
+                  value={formatCurrency(mrrTrajectory)}
+                  subtitle={`Projected monthly increase`}
+                  trendData={revenueTrendData}
+                  showGraph={true}
+                  isPercentage={false}
+                />
+                <StatCard
+                  title="Demo Call Scheduled"
+                  value={stats.demoCallPercentage}
+                  subtitle={stats.demoCallCount}
+                  trendData={aggregateDataByDay(filteredUsers, 'demo_call')}
+                  showGraph={true}
+                  isPercentage={true}
+                />
+                <StatCard
+                  title="Onboarding Call Scheduled"
+                  value={stats.onboardingCallPercentage}
+                  subtitle={stats.onboardingCallCount}
+                  trendData={aggregateDataByDay(filteredUsers, 'onboarding_call')}
+                  showGraph={true}
+                  isPercentage={true}
+                />
                 <LeviCommissionCard users={filteredUsers} />
               </>
             )}
             {activeTab === 'Sales' && (
               <>
-                <StatCard title="Daily MRR" value={formatCurrency(avgDailyMRR)} subtitle={`Average Daily increase`} trendData={revenueTrendData} showGraph={true} isPercentage={false} />
-                <StatCard title="Onboarding Call Scheduled" value={stats.onboardingCallPercentage} subtitle={stats.onboardingCallCount} trendData={aggregateDataByDay(filteredUsers, 'onboarding_call')} showGraph={true} isPercentage={true} />
+                <StatCard
+                  title="Daily MRR"
+                  value={formatCurrency(avgDailyMRR)}
+                  subtitle={`Average Daily increase`}
+                  trendData={revenueTrendData}
+                  showGraph={true}
+                  isPercentage={false}
+                />
+                <StatCard
+                  title="Onboarding Call Scheduled"
+                  value={stats.onboardingCallPercentage}
+                  subtitle={stats.onboardingCallCount}
+                  trendData={aggregateDataByDay(filteredUsers, 'onboarding_call')}
+                  showGraph={true}
+                  isPercentage={true}
+                />
+                <DemoClosedCard filteredUsers={filteredUsers} />
                 <LeviCommissionCard users={filteredUsers} />
               </>
             )}
             {activeTab === 'Customer Support' && (
               <>
-                <StatCard title="MailGun Connected" value={stats.mailgunPercentage} subtitle={stats.mailgunCount} trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')} showGraph={true} isPercentage={true} />
-                <StatCard title="Payment Processor Connected" value={stats.paymentProcessorPercentage} subtitle={stats.paymentProcessorCount} trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')} showGraph={true} isPercentage={true} />
+                <StatCard
+                  title="MailGun Connected"
+                  value={stats.mailgunPercentage}
+                  subtitle={stats.mailgunCount}
+                  trendData={aggregateDataByDay(filteredUsers, 'mailgun_connected')}
+                  showGraph={true}
+                  isPercentage={true}
+                />
+                <StatCard
+                  title="Payment Processor Connected"
+                  value={stats.paymentProcessorPercentage}
+                  subtitle={stats.paymentProcessorCount}
+                  trendData={aggregateDataByDay(filteredUsers, 'payment_processor_integration')}
+                  showGraph={true}
+                  isPercentage={true}
+                />
               </>
             )}
           </dl>
@@ -513,8 +614,8 @@ const Home = () => {
       <UserTable
         filteredUsers={filteredUsers}
         handleSort={handleSort}
-        openReportModal={openReportModal} // Pass the function here
-        formatDemoCompleted={formatDemoCompleted} // Pass the function here
+        openReportModal={openReportModal}
+        formatDemoCompleted={formatDemoCompleted}
         formatDemoClosed={formatDemoClosed}
         formatHasDemoCallScheduled={formatHasDemoCallScheduled}
         formatHasOnboardingCallScheduled={formatHasOnboardingCallScheduled}
@@ -529,12 +630,15 @@ const Home = () => {
         formatDate={formatDate}
         getStatusBgColor={getStatusBgColor}
         formatAccountStatus={formatAccountStatus}
-        activeTab={activeTab} // Pass activeTab state
+        activeTab={activeTab}
+        openEditForm={openEditForm} // Pass the openEditForm function
       />
       {isFilterPanelOpen && (
         <div className="fixed inset-0 bg-opacity-50 z-50 flex justify-end">
           <div className="bg-white w-64 p-4 shadow-lg">
-            <button onClick={() => setIsFilterPanelOpen(false)} className="mb-4">Close</button>
+            <button onClick={() => setIsFilterPanelOpen(false)} className="mb-4">
+              Close
+            </button>
             <Filters
               onFilterChange={handleFilterChange}
               users={users}
@@ -550,6 +654,13 @@ const Home = () => {
         callType={modalCallType}
         user={modalUser}
       />
+      {isEditFormOpen && (
+        <UserEditForm
+          user={editUser}
+          onClose={closeEditForm}
+          onSave={handleSave}
+        />
+      )}
     </>
   );
 };
@@ -582,12 +693,12 @@ const initialFilterState = () => ({
   firstTransaction: 'all',
   mailgun: 'all',
   paymentProcessor: 'all',
-  demoScheduled: 'true', // Set Demo Scheduled to true by default
+  demoScheduled: 'true',
   onboardingScheduled: 'all',
   demoCompleted: 'all',
   onboardingCompleted: 'all',
   plan: 'all',
-  status: ['active', 'trialing', 'past_due', 'canceled']
+  status: ['active', 'trialing', 'past_due', 'canceled'],
 });
 
 export default Home;
