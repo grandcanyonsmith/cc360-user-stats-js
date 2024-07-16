@@ -146,12 +146,12 @@ export default function SalesDataFetcher() {
     return `$${value.toLocaleString()}`;
   };
 
-  // const formatDate = (dateString) => {
-  //   if (!dateString) return ''; // Return an empty string if dateString is undefined or null
-  //   const date = new Date(dateString);
-  //   if (isNaN(date.getTime())) return ''; // Return an empty string if date is invalid
-  //   return date.toLocaleString('default', { month: 'short', day: 'numeric' });
-  // };
+  const formatDate = (dateString) => {
+    if (!dateString) return ''; // Return an empty string if dateString is undefined or null
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return ''; // Return an empty string if date is invalid
+    return date.toLocaleString('default', { month: 'short', day: 'numeric' });
+  };
 
   const aggregateSalesByDay = (data) => {
     const aggregatedData = {};
@@ -258,12 +258,12 @@ const formatCurrency = (value) => {
   }
   return `$${value.toLocaleString()}`;
 };
-// const formatDate = (dateString) => {
-//   if (!dateString) return ''; // Return an empty string if dateString is undefined or null
-//   const date = new Date(dateString);
-//   if (isNaN(date.getTime())) return ''; // Return an empty string if date is invalid
-//   return date.toLocaleString('default', { month: 'short', day: 'numeric' });
-// };
+const formatDate = (dateString) => {
+  if (!dateString) return ''; // Return an empty string if dateString is undefined or null
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return ''; // Return an empty string if date is invalid
+  return date.toLocaleString('default', { month: 'short', day: 'numeric' });
+};
 const DataTable = ({ title, data, columns }) => (
   <div className="mt-4">
     <Heading className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">{title}</Heading>
